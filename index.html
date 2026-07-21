@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intelligence Room — TeamLogic IT | Impactable</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a1525; --bg-deep:#060e1a; --surface:#0f1d33; --surface2:#132340; --card:#122038;
+  --border:rgba(59,130,246,0.10); --border-b:rgba(59,130,246,0.25);
+  --blue:#0099d1; --blue-b:#33b5e5; --navy:#0D2D5E;
+  --green:#10B981; --green-d:rgba(16,185,129,0.12);
+  --amber:#F59E0B; --amber-d:rgba(245,158,11,0.10);
+  --rose:#EF4444; --rose-d:rgba(239,68,68,0.08);
+  --purple:#8B5CF6; --cyan:#06B6D4;
+  --white:#F1F5F9; --slate:#94A3B8; --dim:#64748B;
+  --font:'Inter',-apple-system,sans-serif; --mono:'JetBrains Mono',monospace;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--white);font-family:var(--font);line-height:1.6;-webkit-font-smoothing:antialiased}
+.noise{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.wrap{max-width:1240px;margin:0 auto;padding:0 28px;position:relative;z-index:1}
+
+/* TOP BAR */
+.topbar{background:var(--bg-deep);border-bottom:1px solid var(--border);padding:14px 0}
+.topbar .wrap{display:flex;align-items:center;justify-content:space-between}
+.topbar .logo{font-size:15px;font-weight:800;letter-spacing:2px;color:var(--white)}
+.topbar .logo span{color:var(--blue-b)}
+.topbar .client{font-size:12px;color:var(--dim);font-family:var(--mono)}
+
+/* HERO */
+.hero{padding:44px 0 32px}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(0,153,209,0.10);border:1px solid rgba(0,153,209,0.25);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:700;color:var(--blue-b);letter-spacing:1.5px;margin-bottom:14px}
+.hero-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.hero h1{font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-1.2px;line-height:1.1;margin-bottom:8px}
+.hero h1 span{background:linear-gradient(135deg,var(--blue-b),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero .sub{color:var(--slate);font-size:14px;max-width:760px;line-height:1.7}
+
+/* TAB NAV */
+.tabbar{position:sticky;top:0;z-index:100;background:rgba(6,14,26,0.95);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);margin-top:24px}
+.tabbar .wrap{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding:0 28px}
+.tabbar .wrap::-webkit-scrollbar{display:none}
+.tabbtn{padding:14px 18px;font-size:12.5px;font-weight:600;color:var(--dim);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.2s;font-family:var(--font)}
+.tabbtn:hover{color:var(--slate)}
+.tabbtn.active{color:var(--blue-b);border-bottom-color:var(--blue)}
+.tabbtn .num{font-family:var(--mono);font-size:10px;opacity:0.6;margin-right:5px}
+
+/* PANELS */
+.panel{display:none;padding:36px 0 60px}
+.panel.active{display:block;animation:fadeUp 0.35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* SECTION HEADERS */
+.sec-tag{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--blue);font-weight:700;margin-bottom:8px}
+.panel h2{font-size:25px;font-weight:800;letter-spacing:-0.5px;margin-bottom:6px}
+.panel .lead{color:var(--slate);font-size:14px;margin-bottom:24px;max-width:720px;line-height:1.7}
+.panel h3{font-size:15px;font-weight:700;color:var(--white);margin:32px 0 12px}
+.panel h3 .sub{font-weight:400;color:var(--dim);font-size:12px;margin-left:8px}
+
+/* STATS */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.stat .n{font-family:var(--mono);font-size:23px;font-weight:700}
+.stat .l{font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:4px;line-height:1.4}
+
+/* TABLES */
+.tbl{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow-x:auto;margin:14px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{background:rgba(6,14,26,0.7);padding:10px 13px;text-align:left;color:var(--dim);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap;border-bottom:1px solid var(--border);cursor:pointer;user-select:none}
+th:hover{color:var(--blue-b)}
+td{padding:9px 13px;border-bottom:1px solid rgba(59,130,246,0.05);white-space:nowrap}
+tr:hover td{background:rgba(0,153,209,0.03)}
+.mono{font-family:var(--mono);font-size:11px}
+.bar-td{position:relative}
+.bar-fill{position:absolute;left:0;top:2px;bottom:2px;background:rgba(0,153,209,0.10);border-radius:2px;z-index:0}
+.bar-td span{position:relative;z-index:1}
+
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.v-scale,.v-invest,.v-strong,.v-high{background:var(--green-d);color:var(--green);border:1px solid rgba(16,185,129,0.25)}
+.v-reduce,.v-moderate,.v-saturating,.v-fix{background:var(--amber-d);color:var(--amber);border:1px solid rgba(245,158,11,0.25)}
+.v-cut,.v-exclude,.v-low,.v-declining{background:var(--rose-d);color:var(--rose);border:1px solid rgba(239,68,68,0.2)}
+.v-test,.v-watch{background:rgba(139,92,246,0.1);color:var(--purple);border:1px solid rgba(139,92,246,0.25)}
+.v-launch,.v-webid{background:rgba(6,182,212,0.1);color:var(--cyan);border:1px solid rgba(6,182,212,0.25)}
+.v-hold,.v-medium,.v-ad,.v-stable{background:rgba(59,130,246,0.1);color:var(--blue-b);border:1px solid rgba(59,130,246,0.2)}
+
+/* CHARTS */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+.chart-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.chart-box h4{font-size:13px;font-weight:600;color:var(--slate);margin-bottom:12px}
+@media(max-width:820px){.chart-row{grid-template-columns:1fr}}
+
+/* CALLOUTS */
+.co{background:rgba(0,153,209,0.05);border:1px solid rgba(0,153,209,0.12);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;padding:15px 20px;margin:18px 0;font-size:13px;color:var(--slate);line-height:1.7}
+.co strong{color:var(--white)}
+.co.warn{border-left-color:var(--amber);background:rgba(245,158,11,0.04)}
+.co.crit{border-left-color:var(--rose);background:rgba(239,68,68,0.04)}
+.co.opp{border-left-color:var(--green);background:rgba(16,185,129,0.04)}
+
+/* CARDS */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;margin:18px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px}
+.card.tg{border-top:3px solid var(--green)}
+.card.ta{border-top:3px solid var(--amber)}
+.card.tr{border-top:3px solid var(--rose)}
+.card.tb{border-top:3px solid var(--blue)}
+.card.tp{border-top:3px solid var(--purple)}
+.card.tc{border-top:3px solid var(--cyan)}
+.card h4{font-size:14px;font-weight:700;margin-bottom:6px}
+.card p{font-size:12.5px;color:var(--slate);line-height:1.65}
+.card .ctag{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:7px}
+.card .ctag.g{color:var(--green)}.card .ctag.a{color:var(--amber)}.card .ctag.r{color:var(--rose)}.card .ctag.p{color:var(--purple)}.card .ctag.c{color:var(--cyan)}.card .ctag.b{color:var(--blue-b)}
+
+/* SCORECARD */
+.score2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:18px 0}
+@media(max-width:820px){.score2{grid-template-columns:1fr}}
+.scol{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px}
+.scol.g{border-top:3px solid var(--green)}
+.scol.r{border-top:3px solid var(--rose)}
+.scol h3{font-size:13px;font-weight:800;margin:0 0 12px;letter-spacing:1px;text-transform:uppercase}
+.sitem{padding:9px 0;border-bottom:1px solid rgba(59,130,246,0.05);font-size:13px;color:var(--slate);line-height:1.55}
+.sitem:last-child{border:none}
+.sitem strong{color:var(--white)}
+
+/* MATURITY */
+.maturity{display:flex;gap:0;margin:18px 0;border-radius:10px;overflow:hidden}
+.mstage{flex:1;padding:16px;text-align:center;font-size:12px;font-weight:700;background:var(--surface);border:1px solid var(--border)}
+.mstage .msub{display:block;font-size:10px;font-weight:400;color:var(--dim);margin-top:2px}
+.mstage.done{background:var(--green-d);color:var(--green);border-color:rgba(16,185,129,0.25)}
+.mstage.cur{background:var(--amber-d);color:var(--amber);border-color:rgba(245,158,11,0.35);box-shadow:inset 0 0 24px rgba(245,158,11,0.06)}
+.mstage.next{color:var(--dim)}
+
+/* DECISION BOARD */
+.dboard{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:20px 0}
+@media(max-width:820px){.dboard{grid-template-columns:1fr}}
+.dcol{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.dcol.scale{border-top:4px solid var(--green)}
+.dcol.test{border-top:4px solid var(--purple)}
+.dcol.cut{border-top:4px solid var(--rose)}
+.dcol h3{font-size:15px;font-weight:800;margin:0 0 4px;letter-spacing:2px;text-transform:uppercase}
+.dcol.scale h3{color:var(--green)}.dcol.test h3{color:var(--purple)}.dcol.cut h3{color:var(--rose)}
+.dcol .dsub{font-size:11px;color:var(--dim);margin-bottom:14px}
+.ditem{padding:10px 12px;margin-bottom:8px;background:rgba(6,14,26,0.4);border-radius:8px;font-size:12.5px;line-height:1.5;border:1px solid rgba(59,130,246,0.06)}
+.ditem strong{color:var(--white);display:block;font-size:13px}
+.ditem span{color:var(--slate);font-size:11.5px}
+
+/* TIMELINE */
+.timeline{position:relative;margin:24px 0;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,var(--green),var(--blue),var(--purple))}
+.titem{position:relative;margin-bottom:22px}
+.titem::before{content:'';position:absolute;left:-26px;top:5px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:3px solid var(--blue)}
+.titem.g::before{border-color:var(--green)}
+.titem.p::before{border-color:var(--purple)}
+.titem .twk{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--blue-b);letter-spacing:1px;text-transform:uppercase}
+.titem h4{font-size:14px;font-weight:700;margin:3px 0 5px}
+.titem p{font-size:12.5px;color:var(--slate);line-height:1.6;max-width:820px}
+
+/* CHANNEL MAP */
+.chmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:18px 0}
+.chnode{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center}
+.chnode .chname{font-size:13px;font-weight:700;margin-bottom:4px}
+.chnode .chst{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
+.chnode.active{border-color:rgba(16,185,129,0.3)}
+.chnode.active .chst{color:var(--green)}
+.chnode.underused{border-color:rgba(245,158,11,0.3)}
+.chnode.underused .chst{color:var(--amber)}
+.chnode.missing{border-color:rgba(239,68,68,0.2);opacity:0.75}
+.chnode.missing .chst{color:var(--rose)}
+.chnode .chdesc{font-size:11px;color:var(--dim);margin-top:6px;line-height:1.5}
+
+/* FUNNEL SHIFT */
+.fshift{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;align-items:stretch;margin:18px 0}
+@media(max-width:820px){.fshift{grid-template-columns:1fr}.fshift .arrow{display:none}}
+.fcol{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.fcol h4{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.fcol.now h4{color:var(--amber)}
+.fcol.future h4{color:var(--green)}
+.frow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid rgba(59,130,246,0.06);font-size:12.5px}
+.frow:last-child{border:none}
+.frow .fl{color:var(--slate)}
+.frow .fr{font-family:var(--mono);font-size:11px;font-weight:600}
+.arrow{display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--blue)}
+
+/* TABS WITHIN PANELS */
+.subtabs{display:flex;gap:4px;flex-wrap:wrap;margin:18px 0 0}
+.subtab{padding:8px 15px;background:rgba(15,29,51,0.6);border:1px solid var(--border);border-bottom:none;border-radius:8px 8px 0 0;cursor:pointer;font-size:12px;font-weight:600;color:var(--dim);transition:all 0.2s}
+.subtab.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.subtab:hover:not(.active){color:var(--slate)}
+.subpanel{display:none}
+.subpanel.active{display:block}
+
+/* FOOTER */
+
+/* FLOWCHART */
+.flowchart{display:flex;align-items:stretch;gap:8px;margin:18px 0;flex-wrap:nowrap;overflow-x:auto;padding-bottom:8px}
+.fstep{background:var(--surface);border:1px solid var(--border);border-top:3px solid var(--blue);border-radius:10px;padding:14px;min-width:180px;flex:1;display:flex;gap:10px}
+.fstep .fnum{font-family:var(--mono);font-size:20px;font-weight:800;color:var(--blue-b);opacity:0.5;line-height:1}
+.fstep .fbody h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.fstep .fbody p{font-size:11px;color:var(--slate);line-height:1.45}
+.farrow{display:flex;align-items:center;color:var(--blue);font-size:20px;flex-shrink:0}
+@media(max-width:820px){.flowchart{flex-direction:column}.farrow{transform:rotate(90deg);align-self:center}}
+.footer{padding:40px 0;text-align:center;border-top:1px solid var(--border);margin-top:20px}
+.footer .fb{font-size:15px;font-weight:800;color:var(--blue);letter-spacing:2px;margin-bottom:6px}
+.footer .fi{font-size:11.5px;color:var(--dim);line-height:1.9}
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<div class="topbar"><div class="wrap">
+<div class="logo">IMPACT<span>ABLE</span></div>
+<div class="client">INTELLIGENCE ROOM · TEAMLOGIC IT · JAN—JUL 2026</div>
+</div></div>
+
+<div class="wrap">
+<header class="hero">
+<div class="hero-badge"><span class="dot"></span> LIVE INTELLIGENCE ROOM</div>
+<h1>TeamLogic IT <span>Strategic Impact Report</span></h1>
+<div class="sub">Four full diagnostics run on verified account data, converging on one decision board: what to scale, what to test, what to cut, and the 90-day path from Mid-Ramp to Reach. Every number traces to Windsor.ai, DemandSense, or WebID source data.</div>
+</header>
+</div>
+
+<nav class="tabbar"><div class="wrap" style="padding:0">
+<button class="tabbtn active" onclick="showTab(0)"><span class="num">00</span>Executive Summary</button>
+<button class="tabbtn" onclick="showTab(1)"><span class="num">01</span>Audience & Segments</button>
+<button class="tabbtn" onclick="showTab(2)"><span class="num">02</span>Messaging & Creative</button>
+<button class="tabbtn" onclick="showTab(3)"><span class="num">03</span>Account Intelligence</button>
+<button class="tabbtn" onclick="showTab(4)"><span class="num">04</span>Activation</button>
+<button class="tabbtn" onclick="showTab(5)"><span class="num">05</span>Channel & Frequency</button>
+<button class="tabbtn" onclick="showTab(6)"><span class="num">06</span>90-Day Roadmap</button>
+</div></nav>
+
+<div class="wrap">
+
+<!-- ================= PANEL 0: EXECUTIVE SUMMARY ================= -->
+<div class="panel active" id="panel0">
+<div class="sec-tag">00 · Executive Summary</div>
+<h2>The system works. The funnel doesn't have a bottom.</h2>
+<div class="lead">Six months and $18,269 into the LinkedIn engagement, TeamLogic IT has answered the most important question: what format and message resonates with senior decision-makers at mid-market companies.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--blue-b)">$18,269</div><div class="l">Total Investment</div></div>
+<div class="stat"><div class="n" style="color:var(--blue-b)">232,895</div><div class="l">Impressions</div></div>
+<div class="stat"><div class="n" style="color:var(--blue-b)">2,054</div><div class="l">Clicks</div></div>
+<div class="stat"><div class="n" style="color:var(--blue-b)">6,490</div><div class="l">Accounts Reached</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">21.7%</div><div class="l">Cold Penetrated (90d)</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">0</div><div class="l">Attributed Leads</div></div>
+</div>
+
+<div class="co opp">
+<strong>The thesis: TL video from named executives outperforms everything else by 4-8x, and it gets better with repetition while image creative fatigues.</strong> That finding alone justifies six months of investment. What the system has NOT yet produced is an attributable lead, and the four diagnostics in this room reveal exactly why: the broad launch reached beyond ICP (now a clear focus opportunity), no conversion campaigns exist yet (Lead Gen Forms are ready to launch), and the cold audience is only 21.7% penetrated (a budget and channel expansion question). The path from Mid-Ramp to Reach is three execution moves, not a strategy overhaul.
+</div>
+
+<h3>Scorecard</h3>
+<div class="score2">
+<div class="scol g"><h3 style="color:var(--green)">✓ Working</h3>
+<div class="sitem">TL video CTR <strong>1.76% cold / 2.33% retargeting</strong> — 5x and 3.4x vs image</div>
+<div class="sitem">TL video CTR <strong>improves with frequency</strong> (1.22% → 1.47% over 90 days)</div>
+<div class="sitem">Bill's organic ER <strong>3.31%</strong>, 6% above peer median, ranked #5/12</div>
+<div class="sitem">CXO/Owner seniority driving <strong>80%+ of clicks</strong> at best CTRs</div>
+<div class="sitem">Retargeting pool <strong>96.8% penetrated in 30 days</strong> and growing</div>
+<div class="sitem">Text ads: <strong>40,765 free impressions</strong> at $0</div>
+<div class="sitem">WebID identifying <strong>184 named prospects</strong>, 200 accounts</div>
+</div>
+<div class="scol r"><h3 style="color:var(--rose)">✕ Needs Attention</h3>
+<div class="sitem">Image consuming <strong>62% of spend</strong> for 28% of clicks, CTR declining</div>
+<div class="sitem">Broad launch reached beyond ICP — the data now shows exactly <strong>where to focus the next phase of spend</strong></div>
+<div class="sitem"><strong>Zero Lead Gen Form campaigns</strong> — no conversion mechanism exists</div>
+<div class="sitem"><strong>Pratik offline all of June</strong> — half the TL engine down</div>
+<div class="sitem">Only <strong>8 of 6,490 accounts</strong> at Medium/High engagement; 2 are ICP-fit</div>
+<div class="sitem">Ad audience and website visitors are <strong>separate populations</strong> — zero overlap</div>
+<div class="sitem">Google Ads ($5K/mo) with a stale partner — <strong>no cross-channel view</strong></div>
+</div>
+</div>
+
+<h3>Growth Maturity Position</h3>
+<div class="maturity">
+<div class="mstage done">Validate<span class="msub">Product proven · 96% retention</span></div>
+<div class="mstage cur">Ramp — MID<span class="msub">Format validated · funnel incomplete</span></div>
+<div class="mstage next">Reach<span class="msub">Requires: 1st lead + clean ICP</span></div>
+<div class="mstage next">Supply<span class="msub">Multi-channel scale</span></div>
+<div class="mstage next">Sustain<span class="msub">Attribution-led optimization</span></div>
+</div>
+
+<h3>The Four Diagnostics at a Glance</h3>
+<div class="cards">
+<div class="card tb"><div class="ctag b">01 · Audience & Segments</div><h4>Right people, wrong companies</h4><p>Owner/Partner + CXO deliver 80%+ of clicks at 1.08% and 0.78% CTR — the seniority targeting works. But only 14.8% of clicks come from ICP industries. Pharma is the standout at 0.94% CTR. The fix: negative industry list, zero cost.</p></div>
+<div class="card tp"><div class="ctag p">02 · Account Intelligence</div><h4>Signals with nowhere to go</h4><p>2 strong ICP accounts engaged (Bend Bioscience, Park Place Payments) ready for sales outreach. Point72 visited 9 times. But ad-engaged accounts and website visitors are separate populations, and with no LGF campaign, every signal leaks out of an open funnel.</p></div>
+<div class="card tc"><div class="ctag c">03 · Messaging & Creative</div><h4>The founder voice IS the creative strategy</h4><p>TL video ads outperform demand-gen 8.7x. The experience-led reframe is Bill's winning hook. Every persona currently sees identical creative — persona-specific messaging typically cuts CPA 20-40%.</p></div>
+<div class="card tg"><div class="ctag g">04 · Channel & Frequency</div><h4>Video improves with repetition; image fatigues</h4><p>New frequency data across 7/30/60/90-day windows: video CTR climbs as frequency builds, image CTR drops 32%. Cold audience only 21.7% penetrated — the case for budget reallocation and Google expansion in one dataset.</p></div>
+</div>
+
+<div class="co">
+<strong>How to read this room:</strong> Each diagnostic tab contains the near-full analysis with sortable data, charts, and verdicts. The 90-Day Roadmap tab converges everything into the scale/test/cut decision board, the channel evolution map, and the week-by-week plan.
+</div>
+</div>
+
+<!-- ================= PANEL 1: AUDIENCE & SEGMENTS ================= -->
+<div class="panel" id="panel1">
+<div class="sec-tag">01 · Audience Segment Intelligence</div>
+<h2>Who is engaging, how well they fit, where the waste is.</h2>
+<div class="lead">Source: DemandSense Rate Accounts (6,490 accounts) + Campaign Performance demographics. The first six months cast a deliberately broad net to learn what resonates. That learning now points clearly to where the next phase of spend should focus.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--green)">1.08%</div><div class="l">Best CTR · Owner/Partner</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">0.94%</div><div class="l">Best ICP CTR · Pharma</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">0.02%</div><div class="l">Worst CTR · Entry Level</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">54x</div><div class="l">CTR Gap Best vs Worst</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">14.8%</div><div class="l">ICP Click Share (Baseline)</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">35-40%</div><div class="l">ICP Share After Focus</div></div>
+</div>
+
+<div class="co crit"><strong>Conversion tracking status: no conversion events firing.</strong> Zero conversions and zero leads recorded across all 6,490 accounts. The Insight Tag is installed but no conversion events are configured and no Lead Gen Form campaigns are live. Launching LGF campaigns is the action that transforms this diagnostic from directional (CTR-based) to definitive (CPL-based).</div>
+
+<h3>Industry Performance <span class="sub">Top 20 by clicks · 6,490 accounts</span></h3>
+<div class="tbl"><table>
+<tr><th>Industry</th><th>Accts</th><th>Clicks</th><th>% Clicks</th><th>Imps</th><th>Cost</th><th>CPC</th><th>CTR</th><th>ICP Fit</th><th>Verdict</th></tr>
+<tr><td><strong>N/A</strong></td><td class="mono">1,173</td><td class="mono bar-td"><div class="bar-fill" style="width:100%"></div><span>83</span></td><td class="mono">26.1%</td><td class="mono">29,354</td><td class="mono">$542</td><td class="mono">$6.53</td><td class="mono">0.28%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>food & beverages</strong></td><td class="mono">55</td><td class="mono bar-td"><div class="bar-fill" style="width:23%"></div><span>19</span></td><td class="mono">6.0%</td><td class="mono">859</td><td class="mono">$95</td><td class="mono">$5.02</td><td class="mono">2.21%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>professional training & coaching</strong></td><td class="mono">104</td><td class="mono bar-td"><div class="bar-fill" style="width:20%"></div><span>17</span></td><td class="mono">5.3%</td><td class="mono">5,147</td><td class="mono">$103</td><td class="mono">$6.06</td><td class="mono">0.33%</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>pharmaceuticals</strong></td><td class="mono">76</td><td class="mono bar-td"><div class="bar-fill" style="width:19%"></div><span>16</span></td><td class="mono">5.0%</td><td class="mono">1,700</td><td class="mono">$95</td><td class="mono">$5.96</td><td class="mono">0.94%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>real estate</strong></td><td class="mono">167</td><td class="mono bar-td"><div class="bar-fill" style="width:19%"></div><span>16</span></td><td class="mono">5.0%</td><td class="mono">2,848</td><td class="mono">$59</td><td class="mono">$3.66</td><td class="mono">0.56%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>marketing and advertising</strong></td><td class="mono">208</td><td class="mono bar-td"><div class="bar-fill" style="width:18%"></div><span>15</span></td><td class="mono">4.7%</td><td class="mono">5,452</td><td class="mono">$90</td><td class="mono">$6.01</td><td class="mono">0.28%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>financial services</strong></td><td class="mono">278</td><td class="mono bar-td"><div class="bar-fill" style="width:16%"></div><span>13</span></td><td class="mono">4.1%</td><td class="mono">6,991</td><td class="mono">$127</td><td class="mono">$9.76</td><td class="mono">0.19%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>staffing and recruiting</strong></td><td class="mono">110</td><td class="mono bar-td"><div class="bar-fill" style="width:14%"></div><span>12</span></td><td class="mono">3.8%</td><td class="mono">5,512</td><td class="mono">$88</td><td class="mono">$7.33</td><td class="mono">0.22%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>hospital & health care</strong></td><td class="mono">276</td><td class="mono bar-td"><div class="bar-fill" style="width:13%"></div><span>11</span></td><td class="mono">3.5%</td><td class="mono">5,400</td><td class="mono">$61</td><td class="mono">$5.50</td><td class="mono">0.2%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>management consulting</strong></td><td class="mono">224</td><td class="mono bar-td"><div class="bar-fill" style="width:11%"></div><span>9</span></td><td class="mono">2.8%</td><td class="mono">7,501</td><td class="mono">$50</td><td class="mono">$5.57</td><td class="mono">0.12%</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>internet</strong></td><td class="mono">337</td><td class="mono bar-td"><div class="bar-fill" style="width:10%"></div><span>8</span></td><td class="mono">2.5%</td><td class="mono">7,358</td><td class="mono">$60</td><td class="mono">$7.51</td><td class="mono">0.11%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>broadcast media</strong></td><td class="mono">14</td><td class="mono bar-td"><div class="bar-fill" style="width:10%"></div><span>8</span></td><td class="mono">2.5%</td><td class="mono">611</td><td class="mono">$44</td><td class="mono">$5.49</td><td class="mono">1.31%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>oil & energy</strong></td><td class="mono">27</td><td class="mono bar-td"><div class="bar-fill" style="width:10%"></div><span>8</span></td><td class="mono">2.5%</td><td class="mono">742</td><td class="mono">$83</td><td class="mono">$10.43</td><td class="mono">1.08%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>graphic design</strong></td><td class="mono">5</td><td class="mono bar-td"><div class="bar-fill" style="width:10%"></div><span>8</span></td><td class="mono">2.5%</td><td class="mono">157</td><td class="mono">$38</td><td class="mono">$4.69</td><td class="mono">5.1%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>information technology and service</strong></td><td class="mono">38</td><td class="mono bar-td"><div class="bar-fill" style="width:8%"></div><span>7</span></td><td class="mono">2.2%</td><td class="mono">1,614</td><td class="mono">$35</td><td class="mono">$4.98</td><td class="mono">0.43%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>religious institutions</strong></td><td class="mono">17</td><td class="mono bar-td"><div class="bar-fill" style="width:8%"></div><span>7</span></td><td class="mono">2.2%</td><td class="mono">531</td><td class="mono">$53</td><td class="mono">$7.58</td><td class="mono">1.32%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>non-profit organization management</strong></td><td class="mono">314</td><td class="mono bar-td"><div class="bar-fill" style="width:7%"></div><span>6</span></td><td class="mono">1.9%</td><td class="mono">7,456</td><td class="mono">$56</td><td class="mono">$9.29</td><td class="mono">0.08%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>construction</strong></td><td class="mono">142</td><td class="mono bar-td"><div class="bar-fill" style="width:7%"></div><span>6</span></td><td class="mono">1.9%</td><td class="mono">2,308</td><td class="mono">$30</td><td class="mono">$4.98</td><td class="mono">0.26%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>retail</strong></td><td class="mono">51</td><td class="mono bar-td"><div class="bar-fill" style="width:6%"></div><span>5</span></td><td class="mono">1.6%</td><td class="mono">1,039</td><td class="mono">$25</td><td class="mono">$4.90</td><td class="mono">0.48%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>consumer electronics</strong></td><td class="mono">6</td><td class="mono bar-td"><div class="bar-fill" style="width:6%"></div><span>5</span></td><td class="mono">1.6%</td><td class="mono">203</td><td class="mono">$19</td><td class="mono">$3.75</td><td class="mono">2.46%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr>
+</table></div>
+
+<div class="chart-row">
+<div class="chart-box"><h4>ICP vs Non-ICP Click Distribution</h4><canvas id="a_icpPie" height="210"></canvas></div>
+<div class="chart-box"><h4>Top ICP Industries: CTR Comparison</h4><canvas id="a_icpCtr" height="210"></canvas></div>
+</div>
+
+<div class="co opp"><strong>Pharmaceuticals is the standout ICP signal: 0.94% CTR at $5.96 CPC on only 76 accounts.</strong> That is 5x the CTR of financial services (0.19%) despite finserv having 3.7x more accounts reached. Pharma responds to the current creative; finserv has volume but not engagement, suggesting SOC 2-specific messaging is needed for that vertical.</div>
+
+<h3>Seniority Performance <span class="sub">Campaign Manager demographics</span></h3>
+<div class="tbl"><table>
+<tr><th>Seniority</th><th>Clicks</th><th>% Clicks</th><th>CTR</th><th>CPC</th><th>ICP Fit</th><th>Verdict</th></tr>
+<tr><td><strong>CXO</strong></td><td class="mono">45</td><td class="mono">35.0%</td><td class="mono">0.78%</td><td class="mono">$8.44</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Owner/Partner</strong></td><td class="mono">71</td><td class="mono">55.8%</td><td class="mono">1.08%</td><td class="mono">$7.32</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>VP</strong></td><td class="mono">8</td><td class="mono">6.3%</td><td class="mono">0.25%</td><td class="mono">$10.63</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Director</strong></td><td class="mono">12</td><td class="mono">9.4%</td><td class="mono">0.25%</td><td class="mono">$10.00</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Manager</strong></td><td class="mono">5</td><td class="mono">3.9%</td><td class="mono">0.06%</td><td class="mono">$11.00</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Senior</strong></td><td class="mono">3</td><td class="mono">2.4%</td><td class="mono">0.05%</td><td class="mono">$11.67</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Entry</strong></td><td class="mono">1</td><td class="mono">0.8%</td><td class="mono">0.02%</td><td class="mono">$12.00</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr>
+</table></div>
+
+<h3>Job Function Performance</h3>
+<div class="tbl"><table>
+<tr><th>Function</th><th>Clicks</th><th>% Clicks</th><th>CTR</th><th>CPC</th><th>ICP Fit</th><th>Verdict</th></tr>
+<tr><td><strong>Business Development</strong></td><td class="mono">102</td><td class="mono">80.5%</td><td class="mono">0.8%</td><td class="mono">$7.65</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Operations</strong></td><td class="mono">27</td><td class="mono">21.1%</td><td class="mono">0.57%</td><td class="mono">$8.52</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Finance</strong></td><td class="mono">9</td><td class="mono">7.1%</td><td class="mono">0.72%</td><td class="mono">$10.56</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Information Technology</strong></td><td class="mono">6</td><td class="mono">4.7%</td><td class="mono">0.16%</td><td class="mono">$11.67</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Marketing</strong></td><td class="mono">4</td><td class="mono">3.1%</td><td class="mono">0.08%</td><td class="mono">$11.25</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Administrative</strong></td><td class="mono">3</td><td class="mono">2.4%</td><td class="mono">0.06%</td><td class="mono">$11.67</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>Human Resources</strong></td><td class="mono">2</td><td class="mono">1.6%</td><td class="mono">0.06%</td><td class="mono">$12.50</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr>
+</table></div>
+
+<div class="co warn"><strong>The IT function underperforms at 0.16% CTR</strong> despite being the team that evaluates MSPs. Current CEO-to-CEO creative doesn't land with technical buyers. This is expected (the strategy targets business leaders) but worth a small dedicated test with Bill's co-managed IT content.</div>
+
+<h3>Company Size Performance</h3>
+<div class="tbl"><table>
+<tr><th>Size</th><th>Accts</th><th>Clicks</th><th>% Clicks</th><th>Imps</th><th>CTR</th><th>ICP Fit</th><th>Verdict</th></tr>
+<tr><td><strong>11-50</strong></td><td class="mono">2,209</td><td class="mono">88</td><td class="mono">27.7%</td><td class="mono">53,347</td><td class="mono">0.16%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>N/A</strong></td><td class="mono">1,094</td><td class="mono">72</td><td class="mono">22.6%</td><td class="mono">27,773</td><td class="mono">0.26%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>1-10</strong></td><td class="mono">956</td><td class="mono">64</td><td class="mono">20.1%</td><td class="mono">26,266</td><td class="mono">0.24%</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>51-200</strong></td><td class="mono">1,107</td><td class="mono">59</td><td class="mono">18.6%</td><td class="mono">25,273</td><td class="mono">0.23%</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>201-500</strong></td><td class="mono">487</td><td class="mono">27</td><td class="mono">8.5%</td><td class="mono">10,108</td><td class="mono">0.27%</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>10001+</strong></td><td class="mono">379</td><td class="mono">8</td><td class="mono">2.5%</td><td class="mono">8,001</td><td class="mono">0.1%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>501-1000</strong></td><td class="mono">96</td><td class="mono">0</td><td class="mono">0.0%</td><td class="mono">3,670</td><td class="mono">0.0%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>1001-5000</strong></td><td class="mono">125</td><td class="mono">0</td><td class="mono">0.0%</td><td class="mono">1,946</td><td class="mono">0.0%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr><tr><td><strong>5001-10000</strong></td><td class="mono">37</td><td class="mono">0</td><td class="mono">0.0%</td><td class="mono">469</td><td class="mono">0.0%</td><td><span class="badge v-low">low</span></td><td><span class="badge v-watch">watch</span></td></tr>
+</table></div>
+
+<h3>Discovered Buyer Personas</h3>
+<div class="cards">
+<div class="card tg"><div class="ctag g">Invest</div><h4>The Owner-Operator</h4><p>CEO/Owner/President at 11-50 companies. <strong style="color:var(--green)">1.08% CTR · 55.8% of clicks · $7.32 CPC.</strong> The primary buyer. Pratik's CEO-to-CEO content resonates. Launch "Free AI Readiness Assessment" LGF offer against this persona first.</p></div>
+<div class="card tb"><div class="ctag b">Hold</div><h4>The Compliance-Anxious Executive</h4><p>CFO/COO at pharma/finserv 51-200. High CTR (0.72-0.94%), low volume. Responds to compliance-specific messaging they aren't seeing enough of. Test Pillar 3 vertical creative; upgrade to INVEST if volume follows.</p></div>
+<div class="card ta"><div class="ctag a">Refocus</div><h4>Out-of-ICP Engagers</h4><p>Food & bev, real estate, marketing agencies, graphic design engaged during the broad launch. Useful signal — it confirms the creative travels — but not the buyer we want. Add a negative industry list to redirect roughly $400/mo toward ICP-fit accounts.</p></div>
+<div class="card tp"><div class="ctag p">Watch</div><h4>The Technical Evaluator</h4><p>IT Director/CTO at mid-market. 0.16% CTR — creative mismatch, not audience failure. Small-budget test: Bill's technical depth content. "Your MSP has 3 engineers. We have 70."</p></div>
+</div>
+
+<h3>Action Recommendations</h3>
+<div class="tbl"><table>
+<tr><th>#</th><th>Dimension</th><th>Action</th><th>Segment</th><th>Expected Impact</th></tr>
+<tr><td class="mono">1</td><td>Industry</td><td><span class="badge v-exclude">Exclude</span></td><td>Food & Bev, Real Estate, Marketing, Graphic Design, Broadcast, Religious</td><td>~$400/mo recovered · ICP share 14.8% → 35-40%</td></tr>
+<tr><td class="mono">2</td><td>All</td><td><span class="badge v-launch">Launch</span></td><td>Lead Gen Form campaign on warm pool</td><td>First attributable lead · enables CPL optimization</td></tr>
+<tr><td class="mono">3</td><td>Seniority</td><td><span class="badge v-scale">Scale</span></td><td>Owner/Partner + CXO</td><td>Budget concentrates on 80%+ of engagement</td></tr>
+<tr><td class="mono">4</td><td>Industry</td><td><span class="badge v-invest">Invest</span></td><td>Pharmaceuticals (HIPAA creative)</td><td>Est. 2-3x engagement lift from vertical messaging</td></tr>
+<tr><td class="mono">5</td><td>Size</td><td><span class="badge v-exclude">Exclude</span></td><td>501-10,000 employees</td><td>Zero clicks across 258 accounts · clean signal</td></tr>
+<tr><td class="mono">6</td><td>Industry</td><td><span class="badge v-test">Test</span></td><td>Financial Services (SOC 2 creative)</td><td>Fix the volume-without-engagement gap</td></tr>
+<tr><td class="mono">7</td><td>Function</td><td><span class="badge v-test">Test</span></td><td>IT Function (co-managed content)</td><td>Opens the technical evaluator path</td></tr>
+<tr><td class="mono">8</td><td>Seniority</td><td><span class="badge v-reduce">Reduce</span></td><td>Entry + Senior levels</td><td>0.02-0.05% CTR · not decision-makers</td></tr>
+</table></div>
+</div>
+
+<!-- ================= PANEL 2: ACCOUNT INTELLIGENCE ================= -->
+<div class="panel" id="panel2">
+<div class="sec-tag">03 · Account Intelligence & Pipeline</div>
+<h2>Named accounts, stacked signals, and the open funnel.</h2>
+<div class="lead">Cross-referencing LinkedIn ad engagement (6,490 accounts), WebID website visitors (200 accounts, 184 named prospects), and DemandSense engagement scoring.</div>
+
+<div class="stats"><div class="stat"><div class="n" style="color:#64748B">6,490</div><div class="l">Accounts Reached (Ad Impressions)</div></div><div class="stat"><div class="n" style="color:#3B82F6">59</div><div class="l">Ad Engaged (Clicked)</div></div><div class="stat"><div class="n" style="color:#06B6D4">200</div><div class="l">Website Visitors (WebID)</div></div><div class="stat"><div class="n" style="color:#8B5CF6">184</div><div class="l">Named Prospects ID'd</div></div><div class="stat"><div class="n" style="color:#10B981">8</div><div class="l">Medium/High Engagement</div></div><div class="stat"><div class="n" style="color:#F59E0B">4</div><div class="l">Multi-Signal (Ad + WebID)</div></div></div>
+
+<div class="chart-row">
+<div class="chart-box"><h4>Account Funnel (log scale)</h4><canvas id="b_funnel" height="210"></canvas></div>
+<div class="chart-box"><h4>Signal Source Distribution</h4><canvas id="b_source" height="210"></canvas></div>
+</div>
+
+<div class="co crit"><strong>Critical finding: the ad audience and website visitors are separate populations.</strong> Zero accounts with ad clicks also appear in the WebID visitor data. Only 4 accounts overlap at the impression level (ads served, not clicked, 1 visit each). The LinkedIn ads reach one set of companies; the website traffic (Google/organic) reaches a different set. This is either a targeting misalignment with the current Google partner, or the clearest possible case for bridging the two channels under one system.</div>
+
+<h3>Hot Account Leaderboard <span class="sub">Top 25 by composite score · filter by fit and source</span></h3>
+<div class="subtabs">
+<div class="subtab active" onclick="filterLB(this,'all')">All Accounts</div>
+<div class="subtab" onclick="filterLB(this,'icp')">ICP Fit Only</div>
+<div class="subtab" onclick="filterLB(this,'ad')">Ad Engaged</div>
+<div class="subtab" onclick="filterLB(this,'webid')">WebID Only</div>
+</div>
+<div class="tbl" style="border-radius:0 10px 10px 10px"><table id="lbTable">
+<tr><th>#</th><th>Company</th><th>Score</th><th>Industry</th><th>Size</th><th>Clicks</th><th>Imps</th><th>Web Visits</th><th>Named Prospects</th><th>ICP</th><th>Source</th></tr>
+<tr class="lbrow" data-icp="low" data-src="webid"><td class="mono">1</td><td><strong>Stadtwerke Einbeck</strong></td><td class="mono" style="color:var(--green);font-weight:700">915</td><td>Utilities</td><td class="mono">N/A</td><td class="mono">0</td><td class="mono">0</td><td class="mono">61</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="webid"><td class="mono">2</td><td><strong>Api - American Petroleum Insti</strong></td><td class="mono" style="color:var(--green);font-weight:700">430</td><td>Oil & energy</td><td class="mono">201-500</td><td class="mono">0</td><td class="mono">0</td><td class="mono">28</td><td style="font-size:11px">Sam Minifie</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="strong" data-src="ad"><td class="mono">3</td><td><strong>Bend Bioscience</strong></td><td class="mono" style="color:var(--green);font-weight:700">146</td><td>pharmaceuticals</td><td class="mono">201-500</td><td class="mono">12</td><td class="mono">58</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="webid"><td class="mono">4</td><td><strong>Point72</strong></td><td class="mono" style="color:var(--green);font-weight:700">135</td><td>Financial services</td><td class="mono">1001-5000</td><td class="mono">0</td><td class="mono">0</td><td class="mono">9</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="webid"><td class="mono">5</td><td><strong>Franchise Services</strong></td><td class="mono" style="color:var(--green);font-weight:700">125</td><td>N/A</td><td class="mono">11-50</td><td class="mono">0</td><td class="mono">0</td><td class="mono">7</td><td style="font-size:11px">Nick Angelini, Heath Doolin</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="webid"><td class="mono">6</td><td><strong>Will Marlow Agency</strong></td><td class="mono" style="color:var(--green);font-weight:700">115</td><td>N/A</td><td class="mono">11-50</td><td class="mono">0</td><td class="mono">0</td><td class="mono">7</td><td style="font-size:11px">Ashley Kirchmyer</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">7</td><td><strong>African Women in STEM</strong></td><td class="mono" style="color:var(--green);font-weight:700">106</td><td>professional training & </td><td class="mono">1-10</td><td class="mono">10</td><td class="mono">581</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">8</td><td><strong>Carbone Fine Food</strong></td><td class="mono" style="color:var(--green);font-weight:700">105</td><td>food & beverages</td><td class="mono">1-10</td><td class="mono">8</td><td class="mono">37</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="strong" data-src="webid"><td class="mono">9</td><td><strong>Docket Alarm</strong></td><td class="mono" style="color:var(--green);font-weight:700">105</td><td>Legal services</td><td class="mono">201-500</td><td class="mono">0</td><td class="mono">0</td><td class="mono">7</td><td style="font-size:11px">—</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-webid">WebID</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">10</td><td><strong>Next Step</strong></td><td class="mono" style="color:var(--green);font-weight:700">100</td><td>retail</td><td class="mono">11-50</td><td class="mono">5</td><td class="mono">10</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">11</td><td><strong>Manatee Senior Care</strong></td><td class="mono" style="color:var(--green);font-weight:700">100</td><td>N/A</td><td class="mono">1-10</td><td class="mono">5</td><td class="mono">9</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">12</td><td><strong>International LEAP Network</strong></td><td class="mono" style="color:var(--green);font-weight:700">96</td><td>N/A</td><td class="mono">N/A</td><td class="mono">9</td><td class="mono">551</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">13</td><td><strong>AdventHealth</strong></td><td class="mono" style="color:var(--green);font-weight:700">91</td><td>N/A</td><td class="mono">N/A</td><td class="mono">9</td><td class="mono">114</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">14</td><td><strong>Barlele</strong></td><td class="mono" style="color:var(--green);font-weight:700">91</td><td>marketing and advertisin</td><td class="mono">11-50</td><td class="mono">9</td><td class="mono">61</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">15</td><td><strong>Becker & Poliakoff, P.A.</strong></td><td class="mono" style="color:var(--green);font-weight:700">90</td><td>law practice</td><td class="mono">201-500</td><td class="mono">4</td><td class="mono">10</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="strong" data-src="ad"><td class="mono">16</td><td><strong>Park Place Payments</strong></td><td class="mono" style="color:var(--green);font-weight:700">90</td><td>financial services</td><td class="mono">51-200</td><td class="mono">4</td><td class="mono">6</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-strong">strong</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">17</td><td><strong>G4 Properties LLC</strong></td><td class="mono" style="color:var(--green);font-weight:700">82</td><td>real estate</td><td class="mono">1-10</td><td class="mono">8</td><td class="mono">225</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">18</td><td><strong>Atlas Holdings</strong></td><td class="mono" style="color:var(--green);font-weight:700">82</td><td>N/A</td><td class="mono">N/A</td><td class="mono">8</td><td class="mono">178</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">19</td><td><strong>Sunburn drink</strong></td><td class="mono" style="color:var(--green);font-weight:700">82</td><td>food & beverages</td><td class="mono">1-10</td><td class="mono">8</td><td class="mono">175</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">20</td><td><strong>Antonio's Smarketing Service</strong></td><td class="mono" style="color:var(--green);font-weight:700">82</td><td>N/A</td><td class="mono">N/A</td><td class="mono">8</td><td class="mono">152</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">21</td><td><strong>Seeking new opportunities</strong></td><td class="mono" style="color:var(--green);font-weight:700">81</td><td>broadcast media</td><td class="mono">51-200</td><td class="mono">8</td><td class="mono">66</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">22</td><td><strong>Sheehan Realty</strong></td><td class="mono" style="color:var(--green);font-weight:700">81</td><td>real estate</td><td class="mono">11-50</td><td class="mono">8</td><td class="mono">64</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">23</td><td><strong>Creative Shizzle</strong></td><td class="mono" style="color:var(--green);font-weight:700">81</td><td>graphic design</td><td class="mono">11-50</td><td class="mono">8</td><td class="mono">61</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="moderate" data-src="ad"><td class="mono">24</td><td><strong>Patriot USA</strong></td><td class="mono" style="color:var(--green);font-weight:700">75</td><td>facilities services</td><td class="mono">51-200</td><td class="mono">5</td><td class="mono">15</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-moderate">moderate</span></td><td><span class="badge v-hold">Ad</span></td></tr><tr class="lbrow" data-icp="low" data-src="ad"><td class="mono">25</td><td><strong>Moon Bridge</strong></td><td class="mono" style="color:var(--green);font-weight:700">71</td><td>N/A</td><td class="mono">N/A</td><td class="mono">7</td><td class="mono">128</td><td class="mono">0</td><td style="font-size:11px">—</td><td><span class="badge v-low">low</span></td><td><span class="badge v-hold">Ad</span></td></tr>
+</table></div>
+
+<h3>Route-to-Sales: ICP-Fit Engaged Accounts</h3>
+<div class="cards">
+<div class="card tg"><div class="ctag g">Route Now</div><h4>Bend Bioscience</h4><p>Pharmaceuticals · 201-500 · <strong style="color:var(--green)">12 clicks, Medium engagement.</strong> Deepest ad engagement of any ICP account. Direct outreach from your team this week: "We noticed your team has been exploring our cybersecurity resources."</p></div>
+<div class="card tg"><div class="ctag g">Route Now</div><h4>Park Place Payments</h4><p>Financial Services · 51-200 · <strong style="color:var(--green)">High engagement at only 4 clicks / 6 impressions</strong> — extremely targeted interaction, not casual browsing. Prime ICP fit. SOC 2 conversation starter.</p></div>
+<div class="card ta"><div class="ctag a">Monitor</div><h4>Point72</h4><p>Financial Services · 1,001-5,000 · <strong style="color:var(--amber)">9 website visits, 34 pages.</strong> Active research behavior from a major finserv firm. Larger than typical ICP but warrants sales awareness and LinkedIn retargeting.</p></div>
+<div class="card ta"><div class="ctag a">Monitor</div><h4>Docket Alarm + Snoqualmie Valley Health</h4><p>Legal (7 visits/41 pages) and Healthcare (3 visits/5 pages). ICP-adjacent website visitors in research mode. Snoqualmie is a HIPAA messaging test candidate.</p></div>
+</div>
+
+<h3>Named Prospect Intelligence <span class="sub">184 individuals identified via WebID</span></h3>
+<div class="co warn"><strong>The prospect list needs ICP filtering before sales activation.</strong> Distribution skews non-ICP: automotive (11), construction (9), government (4); seniority skews Entry (51) and unclassified (66). Only 14 CXO-level and 10 Director prospects. Recommended export filter: CXO/Owner/VP/Director + ICP industries + 11-500 employees. Estimated yield: 8-12 qualified prospects. Flag: Sam Minifie (API) at 28 visits / 815 pages is almost certainly automated traffic — verify and exclude.</div>
+
+<h3>Bottleneck Analysis</h3>
+<div class="cards">
+<div class="card tr"><div class="ctag r">Primary</div><h4>No conversion mechanism exists</h4><p>6,490 accounts at the top, zero at the bottom. No LGF, no gated content, no conversion events. This is a capture problem, not a demand problem. The accounts are engaging — the system has no way to convert engagement into a lead.</p></div>
+<div class="card ta"><div class="ctag a">Secondary</div><h4>Targeting quality dilutes the signal</h4><p>The broad launch means the high-engagement list currently mixes out-of-ICP names with the pharma and finserv accounts we want. Focusing targeting concentrates engagement density on ICP-fit accounts and sharpens the routing list.</p></div>
+<div class="card tp"><div class="ctag p">Tertiary</div><h4>WebID prospects skew non-ICP</h4><p>Either website traffic itself is non-ICP (possible Google Ads targeting issue on the incumbent partner's account) or WebID captures organic/referral visitors that differ from the LinkedIn ad audience. Google consolidation answers this question.</p></div>
+</div>
+</div>
+
+<!-- ================= PANEL 3: MESSAGING & CREATIVE ================= -->
+<div class="panel" id="panel3">
+<div class="sec-tag">02 · Messaging & Creative Performance</div>
+<h2>What converts attention, and what to say to whom.</h2>
+<div class="lead">Sources: Windsor.ai campaign data, TL Reports (April/May/June 2026), DemandSense. Creative-level CSV export and Google search terms not yet available — both unlock with monthly exports and Google consolidation.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--green)">2.33%</div><div class="l">Best CTR · MOF TL Video</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">0.49%</div><div class="l">Worst CTR · TOF Image</div></div>
+<div class="stat"><div class="n" style="color:var(--cyan)">8.7x</div><div class="l">TL Video vs Demand-Gen</div></div>
+<div class="stat"><div class="n" style="color:var(--blue-b)">3.31%</div><div class="l">Bill Organic ER (June)</div></div>
+<div class="stat"><div class="n" style="color:var(--purple)">3.86%</div><div class="l">Video ER · Best Format</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">#5/12</div><div class="l">Peer Panel Rank</div></div>
+</div>
+
+<h3>Format Performance Hierarchy</h3>
+<div class="tbl"><table>
+<tr><th>Format</th><th>Spend</th><th>% Spend</th><th>Imps</th><th>Clicks</th><th>% Clicks</th><th>CTR</th><th>CPC</th><th>Verdict</th></tr>
+<tr><td><strong>MOF TL Video (RT)</strong></td><td class="mono">$1,495</td><td class="mono">8%</td><td class="mono">12,078</td><td class="mono">281</td><td class="mono">14%</td><td class="mono" style="color:var(--green)">2.33%</td><td class="mono">$5.32</td><td><span class="badge v-scale">Scale</span></td></tr>
+<tr><td><strong>TOF TL Video (Cold)</strong></td><td class="mono">$5,498</td><td class="mono">30%</td><td class="mono">67,616</td><td class="mono">1,193</td><td class="mono">58%</td><td class="mono" style="color:var(--green)">1.76%</td><td class="mono">$4.61</td><td><span class="badge v-scale">Scale</span></td></tr>
+<tr><td><strong>MOF Image (RT)</strong></td><td class="mono">$1,971</td><td class="mono">11%</td><td class="mono">13,494</td><td class="mono">92</td><td class="mono">4%</td><td class="mono">0.68%</td><td class="mono" style="color:var(--rose)">$21.43</td><td><span class="badge v-reduce">Reduce</span></td></tr>
+<tr><td><strong>TOF Image (Cold)</strong></td><td class="mono">$9,305</td><td class="mono" style="color:var(--rose)">51%</td><td class="mono">98,942</td><td class="mono">488</td><td class="mono">24%</td><td class="mono" style="color:var(--rose)">0.49%</td><td class="mono" style="color:var(--rose)">$19.07</td><td><span class="badge v-cut">Reduce 40%</span></td></tr>
+<tr><td><strong>Text Ads</strong></td><td class="mono">$0</td><td class="mono">0%</td><td class="mono">40,765</td><td class="mono">0</td><td class="mono">0%</td><td class="mono">N/A</td><td class="mono">$0</td><td><span class="badge v-hold">Hold (Free)</span></td></tr>
+<tr><td><strong>Lead Gen Forms</strong></td><td class="mono">$0</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td class="mono">—</td><td><span class="badge v-launch">Launch</span></td></tr>
+</table></div>
+
+<div class="chart-row">
+<div class="chart-box"><h4>Spend Share vs Click Share by Format</h4><canvas id="c_alloc" height="220"></canvas></div>
+<div class="chart-box"><h4>Bill Meyer Weekly ER Trend (April)</h4><canvas id="c_erTrend" height="220"></canvas></div>
+</div>
+
+<div class="co opp"><strong>TL video ads returned 1.48% CTR on $998 (10,421 impressions) in June. Demand-gen creative at similar spend: 0.17%.</strong> That 8.7x gap means the founder voice is not a content strategy that supports the ads — it IS the paid creative strategy. Retargeting TL video (1.83%) beats cold TL video (1.30%), confirming warm audiences engage deeper with the same content.</div>
+
+<h3>Messaging Angle Analysis</h3>
+<div class="cards">
+<div class="card tg"><div class="ctag g">Scale</div><h4>TL Video: Security Expertise (Bill)</h4><p><strong>3.31% organic ER, 1.48% paid CTR.</strong> The creative engine. Top 5 highest-ER posts all used the experience-led reframe: opening by reframing a familiar security assumption from 35 years of practitioner experience. Codify this as the default hook structure.</p></div>
+<div class="card tr"><div class="ctag r">Fix Then Scale</div><h4>TL Video: AI Advisory (Pratik)</h4><p><strong>Offline all of June.</strong> April data: 4.26% video ER, AI content reaches wider (278 avg imps vs 185) but engages shallower (2.69% vs 5.59% ER). Reconnect the profile, then use AI content for reach and security content for engagement depth.</p></div>
+<div class="card ta"><div class="ctag a">Reduce</div><h4>Generic Image Ads</h4><p><strong>51% of spend at 0.49% CTR.</strong> Standard demand-gen creative in generic MSP language that blends with what all 5 competitors say. Cut 40% of budget; keep a reduced presence with fresh creative rotation only.</p></div>
+<div class="card tp"><div class="ctag p">Test</div><h4>Vertical Compliance (New)</h4><p>White space Gap #3 — no competitor creates vertical compliance content. Pharma already clicks at 0.94%. Build HIPAA-specific and SOC 2-specific creative. "If your MSP can't explain SOC 2 in plain English, you have the wrong MSP."</p></div>
+<div class="card tp"><div class="ctag p">Test</div><h4>Retention Proof (New)</h4><p>White space Gap #5 — no competitor publishes outcomes. Test a stat-led image ad: <strong>"96% of our clients never leave. Here's the math."</strong> A/B against current generic image ads to validate proof-first vs feature-first at TOF.</p></div>
+<div class="card ta"><div class="ctag a">Codify</div><h4>Experience-Led Reframe Hook</h4><p>The pattern behind Bill's ER climb from 2.18% to 6.41% in April. Train content production (CJ) to interview specifically for practitioner reframe moments. Make it the default opening for every Bill post.</p></div>
+</div>
+
+<h3>June TL Content Detail <span class="sub">Bill Meyer only · Pratik offline</span></h3>
+<div class="stats">
+<div class="stat"><div class="n">26</div><div class="l">Posts Published</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">3.31%</div><div class="l">Avg ER (+6% vs peers)</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">3.86%</div><div class="l">Video ER (13 videos)</div></div>
+<div class="stat"><div class="n">111</div><div class="l">Avg Imps / Post</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">6</div><div class="l">Zero-Engagement Posts</div></div>
+</div>
+<div class="co warn"><strong>All 6 zero-engagement posts were image posts produced in-house, not by Impactable.</strong> The signal is clear about which content connects. Recommendation: bring that in-house volume into the video program where engagement holds up.</div>
+
+<h3>Persona-to-Messaging Map <span class="sub">The gap: every persona currently sees identical creative</span></h3>
+<div class="tbl"><table>
+<tr><th>Persona</th><th>Current Messaging</th><th>Recommended Messaging</th><th>Test Headline</th><th>Expected Impact</th></tr>
+<tr><td><strong>Owner-Operator</strong><br><span style="font-size:10px;color:var(--dim)">CEO/Owner, 11-50</span></td><td style="color:var(--rose);font-size:11.5px">Generic TL video (same as all)</td><td style="color:var(--green);font-size:11.5px">Pratik CEO-to-CEO AI advisory</td><td style="font-style:italic;font-size:11.5px">"Free AI Readiness Assessment: 30 minutes, no pitch."</td><td style="font-size:11.5px">Highest-CTR segment + persona offer = first LGF conversions</td></tr>
+<tr><td><strong>Compliance Executive</strong><br><span style="font-size:10px;color:var(--dim)">CFO/COO, pharma/finserv</span></td><td style="color:var(--rose);font-size:11.5px">Generic security messaging</td><td style="color:var(--green);font-size:11.5px">Bill vertical compliance (HIPAA / SOC 2)</td><td style="font-style:italic;font-size:11.5px">"If your MSP can't explain SOC 2 in plain English..."</td><td style="font-size:11.5px">Fix finserv volume-without-engagement gap (0.19% CTR)</td></tr>
+<tr><td><strong>Technical Evaluator</strong><br><span style="font-size:10px;color:var(--dim)">IT Dir/CTO, mid-market</span></td><td style="color:var(--rose);font-size:11.5px">CEO-to-CEO TL (mismatched)</td><td style="color:var(--green);font-size:11.5px">Bill co-managed IT + technical depth</td><td style="font-style:italic;font-size:11.5px">"Your MSP has 3 engineers. We have 70."</td><td style="font-size:11.5px">Lift IT function CTR from 0.16% toward 0.5-1.0%</td></tr>
+<tr><td><strong>Non-ICP Clicker</strong><br><span style="font-size:10px;color:var(--dim)">Wrong industries</span></td><td style="color:var(--rose);font-size:11.5px">Same generic ads</td><td style="color:var(--green);font-size:11.5px">EXCLUDE — fix targeting, not messaging</td><td style="font-size:11.5px">N/A</td><td style="font-size:11.5px">~$400/mo recovered</td></tr>
+</table></div>
+
+<div class="co"><strong>Persona-specific messaging typically reduces cost-per-conversion 20-40%</strong> versus one-size-fits-all creative. Building even one persona-specific ad set (Owner-Operator + AI Readiness offer) validates the approach before scaling to all three.</div>
+
+<h3>Organic Thought Leadership Performance <span class="sub">The content engine behind the paid creative · 3-month arc</span></h3>
+<div class="lead" style="margin-bottom:16px">The same executive voices that power the paid TL ads publish organically every week. This is where messaging is tested for free before it is scaled with budget. Data: Shield Analytics peer-benchmark panel, April through June 2026.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--green)">4.29%</div><div class="l">April ER (both voices)</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">1.84%</div><div class="l">May ER (Pratik offline)</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">3.31%</div><div class="l">June ER (Bill only)</div></div>
+<div class="stat"><div class="n" style="color:var(--blue-b)">#5/12</div><div class="l">June Peer Rank</div></div>
+<div class="stat"><div class="n" style="color:var(--cyan)">111</div><div class="l">Avg Impressions (Q1 reach)</div></div>
+</div>
+
+<div class="chart-row">
+<div class="chart-box"><h4>3-Month Engagement Rate Arc vs Peer Median</h4><canvas id="c_organicArc" height="220"></canvas></div>
+<div class="chart-box"><h4>Content Pillar: Reach vs Engagement</h4><canvas id="c_pillarSplit" height="220"></canvas></div>
+</div>
+
+<div class="co crit"><strong>The May disconnection cost is visible in the data.</strong> When Pratik's profile disconnected in May, combined ER dropped from 4.29% to 1.84% — a 57% fall — and 14 queued posts published to nobody. June recovered to 3.31% on Bill alone, but that is one voice carrying a two-voice program. The single most valuable organic fix is keeping both profiles connected: the difference between 4.29% and 1.84% is the difference between a program 23% above peer median and one 54% below it.</div>
+
+<h3>What the Organic Data Teaches <span class="sub">Consistent across all three months</span></h3>
+<div class="cards">
+<div class="card tg"><div class="ctag g">Scale</div><h4>Video is the engine</h4><p>Video ran 3.86% ER (June) to 5.0% ER (April) — the best combination of engagement and reach in the mix, and the format Impactable produces. Every zero-engagement post in June was an in-house image post, not video. The signal is unambiguous: more video, less static image.</p></div>
+<div class="card tb"><div class="ctag b">Sequence</div><h4>Cybersecurity engages, AI reaches</h4><p>Cybersecurity content: 5.59% ER at 185 avg impressions. AI content: 2.69% ER at 278 avg impressions. Security goes deep, AI goes wide. Use AI content on reach days (top of funnel) and cybersecurity on engagement days. This split maps directly to the two executive voices.</p></div>
+<div class="card ta"><div class="ctag a">Fix</div><h4>Solid engagement, thin reach</h4><p>June engagement sat in the upper-middle quartile (ER Q3) but reach sat in the bottom quartile (Q1) at 111 avg impressions. The content connects with the people who see it — not enough people see it. This is the organic case for the paid amplification of top posts (already working at 8.7x) and for the engagement-to-outreach flow in the Activation tab.</p></div>
+<div class="card tp"><div class="ctag p">Codify</div><h4>Bill's four-week climb</h4><p>Bill's weekly ER rose every week of April: 2.18% → 4.81% → 6.08% → 6.41%. The driver was the experience-led reframe hook. That trajectory is the proof the hook pattern works and should be the default structure — not a one-time spike.</p></div>
+</div>
+
+<div class="co opp"><strong>Organic and paid are one system.</strong> Organic is the free testing ground: the cybersecurity-over-AI pattern, the video-over-image pattern, and the experience-led hook were all proven organically before they informed paid creative. The paid channel then scales the winners (TL video ads at 1.48% CTR, 8.7x demand-gen). The missing third piece — harvesting the engagement that organic generates — is the Activation opportunity.</div>
+
+</div>
+
+<!-- ================= PANEL 4: CHANNEL & FREQUENCY ================= -->
+<div class="panel" id="panel4">
+<div class="sec-tag">05 · Channel Efficiency & Frequency Intelligence</div>
+<h2>Penetration, saturation, and the reach ceiling.</h2>
+<div class="lead">Windsor.ai verified frequency and unique reach across 7/30/60/90-day windows. This dataset answers: which audiences are under/over penetrated, where diminishing returns start, and where budget should shift.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--amber)">21.7%</div><div class="l">Cold Audience Penetrated (90d)</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">78.3%</div><div class="l">Cold Audience Untouched</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">96.8%</div><div class="l">Warm Pool Penetrated (30d)</div></div>
+<div class="stat"><div class="n" style="color:var(--cyan)">1,427</div><div class="l">Warm Pool Size (Growing)</div></div>
+<div class="stat"><div class="n" style="color:var(--rose)">35.4x</div><div class="l">Text Ad Frequency (Free)</div></div>
+</div>
+
+<h3>Frequency & Penetration Matrix <span class="sub">All campaigns · all windows</span></h3>
+<div class="tbl"><table>
+<tr><th>Campaign</th><th>Audience</th><th>7d Freq</th><th>30d Freq</th><th>60d Freq</th><th>90d Freq</th><th>7d Pen</th><th>30d Pen</th><th>60d Pen</th><th>90d Pen</th><th>CTR Trend</th><th>Status</th></tr>
+<tr><td><strong>TOF TL Video</strong></td><td class="mono">~35K</td><td class="mono">1.2x</td><td class="mono">1.9x</td><td class="mono">2.7x</td><td class="mono">3.6x</td><td class="mono">5.0%</td><td class="mono">11.2%</td><td class="mono">17.1%</td><td class="mono" style="color:var(--amber)">21.7%</td><td><span class="badge v-scale">Improving</span></td><td><span class="badge v-launch">Underpenetrated</span></td></tr>
+<tr><td><strong>TOF Image</strong></td><td class="mono">~35K</td><td class="mono">1.4x</td><td class="mono">2.8x</td><td class="mono">4.2x</td><td class="mono">5.7x</td><td class="mono">3.9%</td><td class="mono">9.6%</td><td class="mono">13.7%</td><td class="mono">16.7%</td><td><span class="badge v-declining">Declining</span></td><td><span class="badge v-cut">Fatiguing</span></td></tr>
+<tr><td><strong>MOF TL Video</strong></td><td class="mono">~1,200</td><td class="mono">2.0x</td><td class="mono">4.2x</td><td class="mono">6.3x</td><td class="mono">8.3x</td><td class="mono">59.8%</td><td class="mono" style="color:var(--green)">96.8%</td><td class="mono">112.9%</td><td class="mono">118.9%</td><td><span class="badge v-scale">Improving</span></td><td><span class="badge v-strong">Healthy</span></td></tr>
+<tr><td><strong>MOF Image</strong></td><td class="mono">~1,200</td><td class="mono">1.2x</td><td class="mono">2.1x</td><td class="mono">5.9x</td><td class="mono">10.6x</td><td class="mono">19.8%</td><td class="mono">47.3%</td><td class="mono">78.2%</td><td class="mono">87.4%</td><td><span class="badge v-stable">Stable</span></td><td><span class="badge v-saturating">Saturating</span></td></tr>
+<tr><td><strong>Text Ads</strong></td><td class="mono">~1,200</td><td class="mono" style="color:var(--rose)">6.7x</td><td class="mono" style="color:var(--rose)">20.1x</td><td class="mono" style="color:var(--rose)">32.0x</td><td class="mono" style="color:var(--rose)">35.4x</td><td class="mono">41.0%</td><td class="mono">66.4%</td><td class="mono">86.8%</td><td class="mono">96.0%</td><td class="mono">N/A</td><td><span class="badge v-low">Oversaturated (Free)</span></td></tr>
+</table></div>
+
+<div class="chart-row">
+<div class="chart-box"><h4>Frequency Growth 7d → 90d</h4><canvas id="d_freq" height="220"></canvas></div>
+<div class="chart-box"><h4>CTR Trend Across Windows</h4><canvas id="d_ctr" height="220"></canvas></div>
+</div>
+<div class="chart-row">
+<div class="chart-box"><h4>Cold Penetration (% of 35K)</h4><canvas id="d_coldpen" height="200"></canvas></div>
+<div class="chart-box"><h4>Warm Penetration (% of 1,200 pool)</h4><canvas id="d_warmpen" height="200"></canvas></div>
+</div>
+
+<div class="co opp"><strong>The signature finding: video improves under repetition, image fatigues.</strong> TOF TL Video CTR climbed from 1.22% (7d) to 1.47% (90d) as frequency built to 3.6x — because each promoted post is different content. TOF Image CTR dropped 32% (0.71% → 0.48%) at 5.7x frequency — the same static creatives repeated. The audience is telling us which format builds trust over time.</div>
+
+<div class="co crit"><strong>78.3% of the cold audience has never seen a TL video ad.</strong> At current spend (~$750/mo on TOF TL Video), the campaign reaches ~2,500 new unique members monthly. Reaching 50% penetration takes 5-6 more months at this pace. Three levers: (1) reallocate image budget into video, (2) clean the 35K audience to ~15-20K ICP-fit (instantly doubles penetration %), (3) add Google to capture the demand LinkedIn can't reach.</div>
+
+<div class="co opp"><strong>The retargeting engine is healthy and pool-constrained, not budget-constrained.</strong> MOF TL Video hits 96.8% of the warm pool within 30 days, the pool is growing (1,427 uniques at 90d vs ~1,200 baseline), and CTR improves with frequency (1.60% → 2.33% at 8.3x). New members enter faster than they age out. The constraint is pool size — which grows through more TOF reach and website traffic.</div>
+
+<h3>Monthly Investment Trend</h3>
+<div class="chart-box" style="margin:14px 0"><h4>Spend & Clicks by Month</h4><canvas id="d_monthly" height="200"></canvas></div>
+<div class="co warn"><strong>Spend declined in June (~$2,115) and July is pacing at ~$1,400.</strong> Campaigns were paused or reduced mid-June (6/11-6/21), coinciding with Pratik going offline. Lower spend = slower cold penetration = longer time to graduation. If intentional, it should be a documented decision; if not, daily budgets need review.</div>
+
+<h3>Budget Reallocation Model <span class="sub">Same base budget, conversion layer added</span></h3>
+<div class="tbl"><table>
+<tr><th>Campaign</th><th>Current $/mo</th><th>Proposed $/mo</th><th>Change</th><th>Rationale</th></tr>
+<tr><td>TOF Image</td><td class="mono">~$1,550</td><td class="mono">~$950</td><td class="mono" style="color:var(--rose)">−$600</td><td>Declining CTR, 4.1x less efficient, fatigue confirmed by frequency data</td></tr>
+<tr><td>TOF TL Video</td><td class="mono">~$900</td><td class="mono">~$1,300</td><td class="mono" style="color:var(--green)">+$400</td><td>Best CTR, improving with frequency, 78% of audience unreached</td></tr>
+<tr><td>Lead Gen Forms <span class="badge v-launch">NEW</span></td><td class="mono">$0</td><td class="mono">~$400</td><td class="mono" style="color:var(--green)">+$400</td><td>No conversion campaign exists; warm pool is primed at 96.8% penetration</td></tr>
+<tr><td>MOF TL Video</td><td class="mono">~$250</td><td class="mono">~$350</td><td class="mono" style="color:var(--green)">+$100</td><td>Pool growing, CTR improving, healthy 8.3x frequency</td></tr>
+<tr><td>MOF Image</td><td class="mono">~$330</td><td class="mono">~$230</td><td class="mono" style="color:var(--rose)">−$100</td><td>Saturating at 10.6x; shift weight to the video variant</td></tr>
+<tr><td><strong>Total</strong></td><td class="mono"><strong>~$3,030</strong></td><td class="mono"><strong>~$3,230</strong></td><td class="mono">+$200</td><td>Slight increase justified by adding the conversion layer</td></tr>
+</table></div>
+</div>
+
+<!-- ================= PANEL 5: 90-DAY ROADMAP ================= -->
+<div class="panel" id="panel5">
+<div class="sec-tag">06 · The 90-Day Roadmap</div>
+<h2>Scale. Test. Cut. Then expand the system.</h2>
+<div class="lead">Every item below traces to a diagnostic finding. The decision board converges four diagnostics into one allocation answer; the channel evolution map shows how the system grows from one channel to a unified demand engine.</div>
+
+<h3>The Decision Board</h3>
+<div class="dboard">
+<div class="dcol cut"><h3>Cut</h3><div class="dsub">Redirect this spend to what's proven</div>
+<div class="ditem"><strong>TOF Image budget (−40% / −$600/mo)</strong><span>0.49% CTR and declining as frequency builds · 51% of spend for 24% of clicks · the format fatigues where video compounds</span></div>
+<div class="ditem"><strong>Out-of-ICP industries (negative list)</strong><span>Food & bev, real estate, marketing, graphic design · redirect ~$400/mo toward ICP-fit accounts</span></div>
+<div class="ditem"><strong>Company sizes 501-10,000</strong><span>Zero clicks across 258 accounts · clean signal to stop serving</span></div>
+<div class="ditem"><strong>Entry + Senior seniority</strong><span>0.02-0.05% CTR · not the decision-makers at this company size</span></div>
+<div class="ditem"><strong>MOF Image weight (−$100/mo)</strong><span>Saturating at 10.6x frequency · the video variant outperforms it 3.4x</span></div>
+</div>
+<div class="dcol scale"><h3>Scale</h3><div class="dsub">Proven performers — put more behind them</div>
+<div class="ditem"><strong>TOF TL Video (+$400/mo)</strong><span>1.76% CTR improving as frequency builds · only 21.7% of the audience reached · no fatigue signal</span></div>
+<div class="ditem"><strong>MOF TL Video retargeting (+$100/mo)</strong><span>2.33% CTR and climbing · pool growing · healthy 8.3x frequency</span></div>
+<div class="ditem"><strong>Owner/Partner + CXO targeting</strong><span>80%+ of clicks at 1.08% / 0.78% CTR · the seniority layer works</span></div>
+<div class="ditem"><strong>Bill's experience-led reframe content</strong><span>Drove ER from 2.18% to 6.41% · codify as the default hook · sponsor top posts</span></div>
+<div class="ditem"><strong>Pharma vertical focus</strong><span>0.94% CTR, best ICP industry · HIPAA-specific creative next</span></div>
+</div>
+<div class="dcol test"><h3>Test</h3><div class="dsub">Data says these should work — prove it</div>
+<div class="ditem"><strong>Lead Gen Forms (NEW $400/mo)</strong><span>Warm pool 96.8% penetrated and primed · Cybersecurity Risk Scorecard offer · 4 fields</span></div>
+<div class="ditem"><strong>Persona-specific creative</strong><span>AI Readiness offer for Owner-Operators · SOC 2 checklist for Compliance Execs · benchmark 20-40% CPA reduction</span></div>
+<div class="ditem"><strong>Retention proof messaging</strong><span>"96% of clients never leave. Here's the math." A/B vs generic image</span></div>
+<div class="ditem"><strong>Technical evaluator track</strong><span>Bill's co-managed IT content to IT Directors · small budget · address the 0.16% CTR gap</span></div>
+<div class="ditem"><strong>Google Search consolidation</strong><span>Audit the current account · geo + compliance keywords · competitor conquest terms</span></div>
+</div>
+</div>
+
+<h3>Channel Evolution Map <span class="sub">Current state → 90-day state</span></h3>
+<div class="chmap">
+<div class="chnode active"><div class="chname">LinkedIn Ads</div><div class="chst">● Active</div><div class="chdesc">$3K/mo · reallocating to video + LGF</div></div>
+<div class="chnode active"><div class="chname">TL Content Engine</div><div class="chst">● Active (Half)</div><div class="chdesc">Bill live · Pratik needs reconnection</div></div>
+<div class="chnode underused"><div class="chname">Google Search</div><div class="chst">● Underused</div><div class="chdesc">$5K/mo with stale partner · consolidation target</div></div>
+<div class="chnode underused"><div class="chname">WebID / De-anon</div><div class="chst">● Underused</div><div class="chdesc">184 prospects captured · no activation loop</div></div>
+<div class="chnode underused"><div class="chname">CRM / HubSpot</div><div class="chst">● Migrating</div><div class="chdesc">Aug 2026 · unlocks attribution + CAPI</div></div>
+<div class="chnode missing"><div class="chname">Lead Gen Forms</div><div class="chst">● Missing</div><div class="chdesc">The conversion layer · launch weeks 2-4</div></div>
+<div class="chnode missing"><div class="chname">Sales Activation</div><div class="chst">● Missing</div><div class="chdesc">Hot-account routing to your sales team</div></div>
+<div class="chnode missing"><div class="chname">Programmatic / Meta</div><div class="chst">● Future</div><div class="chdesc">Trigger: retarget pool &gt;5K · est. Q4 2026</div></div>
+</div>
+<div class="co"><strong>Read:</strong> the paid social layer is solid and optimizable. The capture layer (LGF), activation layer (sales routing), and search layer (Google) are the gaps — which is exactly where the constraint lives. The system doesn't need more top-of-funnel. It needs a bottom and a bridge.</div>
+
+
+<h3>Google + LinkedIn: The Unified Demand System <span class="sub">Why the next phase adds search — and how the two channels compound</span></h3>
+<div class="lead" style="margin-bottom:16px">The frequency data makes the case on its own: at current budget, LinkedIn reaches about 22% of the cold audience in 90 days. The other 78% either needs more LinkedIn spend or a second channel. Google Search is the natural complement — it captures the in-market demand that the thought-leadership content creates. Right now that search budget (~$5K/mo) runs on a separate account that hasn't been optimized against TeamLogic's actual differentiators.</div>
+
+<div class="cards">
+<div class="card tb"><div class="ctag b">How they work together</div><h4>LinkedIn creates demand. Google captures it.</h4><p>A CIO watches Bill explain what a breach investigation actually looks like. Weeks later, when their current MSP misses an SLA, they search "managed IT services near me" or "SOC 2 compliant IT provider." If TeamLogic owns that search moment, the LinkedIn awareness converts. If not, a competitor captures the demand TeamLogic paid to create. The two channels are incomplete alone.</p></div>
+<div class="card tc"><div class="ctag c">What consolidation unlocks</div><h4>One system, one attribution view</h4><p>Under one roof with HubSpot (August migration): Google clickers feed LinkedIn retargeting pools · LinkedIn-warmed accounts show higher Google conversion rates · and for the first time, a single view of which channel touched a deal and in what order. Today the two channels can't see each other.</p></div>
+</div>
+
+<h3>Search Priorities Mapped to the Value Proposition <span class="sub">Where the UVP should own the search results page</span></h3>
+<div class="lead" style="margin-bottom:12px">TeamLogic's differentiators — AI-forward, security-first, SOC 2 Type 2, multi-territory franchise with enterprise depth — point directly at high-intent search themes that no local MSP competitor is defending well. These are the keyword themes to prioritize, ranked by intent and mapped to the white-space gaps.</div>
+
+<div class="tbl"><table>
+<tr><th>Keyword Theme</th><th>Intent</th><th>Competition</th><th>UVP / White-Space Link</th><th>Priority</th></tr>
+<tr><td><strong>"managed IT services [city]"</strong></td><td><span class="badge v-high">Very High</span></td><td>High</td><td>Core service, geo-modified to franchise territories (PA/NJ/NC/FL)</td><td><span class="badge v-scale">Start Here</span></td></tr>
+<tr><td><strong>"SOC 2 compliant IT provider"</strong></td><td><span class="badge v-high">Very High</span></td><td>Low-Med</td><td>Gap #3: security-first positioning · SOC 2 Type 2 is a real, defensible differentiator</td><td><span class="badge v-scale">Start Here</span></td></tr>
+<tr><td><strong>"HIPAA compliant IT services"</strong></td><td><span class="badge v-high">Very High</span></td><td>Low-Med</td><td>Gap #3, pharma/healthcare vertical · pharma already the top-engaging ICP industry</td><td><span class="badge v-scale">Start Here</span></td></tr>
+<tr><td><strong>"co-managed IT services"</strong></td><td><span class="badge v-high">High</span></td><td>Low</td><td>Speaks to the Technical Evaluator persona · enterprise-depth differentiator ("70 engineers")</td><td><span class="badge v-scale">Start Here</span></td></tr>
+<tr><td><strong>"CMIT Solutions alternative"</strong></td><td><span class="badge v-high">High</span></td><td>Low</td><td>Competitor conquest · direct franchise-vs-franchise comparison</td><td><span class="badge v-test">Phase 2</span></td></tr>
+<tr><td><strong>"AI readiness assessment small business"</strong></td><td><span class="badge v-medium">Medium</span></td><td>Low</td><td>Gap #2: AI advisory · matches the Owner-Operator LGF offer · Pratik's voice</td><td><span class="badge v-test">Phase 2</span></td></tr>
+<tr><td><strong>"IT support for [pharma/finance/legal]"</strong></td><td><span class="badge v-high">High</span></td><td>Low-Med</td><td>Vertical-specific · concentrates spend on ICP industries that already engage</td><td><span class="badge v-test">Phase 2</span></td></tr>
+<tr><td><strong>"what is managed IT / MSP pricing"</strong></td><td><span class="badge v-low">Low</span></td><td>High</td><td>Research-stage · content play only, not conversion · feed retargeting</td><td><span class="badge v-hold">Content Only</span></td></tr>
+</table></div>
+
+<div class="cards">
+<div class="card ta"><div class="ctag a">The Audit Offer</div><h4>Start with a free audit of the current account</h4><p>The current search account is, by the team's own read, stale. Before recommending a spend increase or a rebuild, the right first move is an audit: what's the wasted spend, which search terms are draining budget, is conversion tracking even firing, and how does the keyword set line up against the UVP themes above. This leads with value — the client sees exactly what's underperforming before any consolidation decision, no commitment required.</p></div>
+<div class="card tb"><div class="ctag b">Negative Keywords Day One</div><h4>Protect the budget from the start</h4><p>Exclude the categories that drained the LinkedIn broad launch and that waste search spend: free/DIY IT, job-seeker queries ("IT jobs," "MSP careers"), consumer tech support, and out-of-territory geos. Same discipline that focuses the LinkedIn audience applies to search from the first dollar.</p></div>
+</div>
+
+<div class="co opp"><strong>The expansion is a client win first.</strong> TeamLogic is already spending on search — the question is whether that spend is working as hard as it could and whether it's connected to the LinkedIn engine. An audit answers the first question at no cost. Consolidation answers the second by turning two disconnected channels into one measurable demand system. The agency footprint grows only because the client's results do.</div>
+
+<h3>Funnel Architecture: Today → 90 Days</h3>
+<div class="fshift">
+<div class="fcol now"><h4>Today — Open Funnel</h4>
+<div class="frow"><span class="fl">TOF · Cold awareness</span><span class="fr" style="color:var(--green)">TL Video + Image · $2,450/mo</span></div>
+<div class="frow"><span class="fl">MOF · Warm nurture</span><span class="fr" style="color:var(--amber)">RT Video + Image · $580/mo</span></div>
+<div class="frow"><span class="fl">BOF · Conversion</span><span class="fr" style="color:var(--rose)">NOTHING — zero campaigns</span></div>
+<div class="frow"><span class="fl">Capture · Search intent</span><span class="fr" style="color:var(--rose)">Other partner · disconnected</span></div>
+<div class="frow"><span class="fl">Activation · Sales routing</span><span class="fr" style="color:var(--rose)">Ad hoc bi-weekly list</span></div>
+<div class="frow"><span class="fl">Attribution</span><span class="fr" style="color:var(--rose)">None · Keap → HubSpot pending</span></div>
+</div>
+<div class="arrow">→</div>
+<div class="fcol future"><h4>90 Days — Closed Loop</h4>
+<div class="frow"><span class="fl">TOF · Cold awareness</span><span class="fr" style="color:var(--green)">TL Video weighted · $2,250/mo</span></div>
+<div class="frow"><span class="fl">MOF · Warm nurture</span><span class="fr" style="color:var(--green)">Video + gated assets · $580/mo</span></div>
+<div class="frow"><span class="fl">BOF · Conversion</span><span class="fr" style="color:var(--green)">LGF Scorecard offer · $400/mo</span></div>
+<div class="frow"><span class="fl">Capture · Search intent</span><span class="fr" style="color:var(--green)">Google under Impactable · $5K/mo</span></div>
+<div class="frow"><span class="fl">Activation · Sales routing</span><span class="fr" style="color:var(--green)">Scored hot-account routing</span></div>
+<div class="frow"><span class="fl">Attribution</span><span class="fr" style="color:var(--green)">HubSpot + LinkedIn CAPI live</span></div>
+</div>
+</div>
+
+<h3>Week-by-Week Execution</h3>
+<div class="timeline">
+<div class="titem g"><div class="twk">Weeks 1-2 · Fix the Foundation</div><h4>Three zero-cost moves</h4><p>Reconnect Pratik's LinkedIn profile (half the TL engine is offline). Upload negative industry list — food & bev, real estate, marketing, graphic design, broadcast, religious (ICP click share jumps from 14.8% toward 35-40%). Reduce TOF image daily budget 40% and stage the reallocation.</p></div>
+<div class="titem g"><div class="twk">Weeks 2-4 · Launch the Conversion Layer</div><h4>The graduation trigger</h4><p>Launch Lead Gen Form campaign: warm retargeting pool, Free Cybersecurity Risk Scorecard, 4 fields, 48-hour delivery. Route Bend Bioscience and Park Place Payments to your team for direct outreach. Produce the first gated asset (HIPAA checklist or SOC 2 readiness guide) as the second LGF offer.</p></div>
+<div class="titem"><div class="twk">Weeks 4-8 · Build the Cross-Channel System</div><h4>The expansion conversation</h4><p>Strategy session to walk through this intelligence room, the Google consolidation case, and the HubSpot attribution plan. Run the Google Ads audit on the current account. Connect HubSpot to LinkedIn conversion events as the migration completes. Export the ICP-filtered prospect list for sales enrichment.</p></div>
+<div class="titem p"><div class="twk">Weeks 8-12 · Scale What Works</div><h4>Compound the system</h4><p>Activate second cold persona: IT Director/CTO at mid-market manufacturing with the CMMC compliance angle. Launch persona-specific LGF offers (AI Readiness for Owner-Operators). Publish first formal case study. If Google approved: launch unified keyword architecture — geo-modified core terms, compliance-specific, competitor conquest — and wire Google clickers into LinkedIn retargeting.</p></div>
+</div>
+
+<h3>Graduation Triggers <span class="sub">What moves TeamLogic from Mid-Ramp to Reach</span></h3>
+<div class="tbl"><table>
+<tr><th>Metric</th><th>Target</th><th>Current</th><th>Unlocked By</th></tr>
+<tr><td>First LinkedIn-attributed lead</td><td class="mono">1+</td><td class="mono" style="color:var(--rose)">0</td><td>LGF launch (weeks 2-4)</td></tr>
+<tr><td>ICP click share</td><td class="mono">50%+</td><td class="mono" style="color:var(--rose)">14.8%</td><td>Negative industry list (week 1)</td></tr>
+<tr><td>Both TL voices active</td><td class="mono">2/2</td><td class="mono" style="color:var(--amber)">1/2</td><td>Pratik reconnection (week 1)</td></tr>
+<tr><td>Cold audience penetration</td><td class="mono">40%+</td><td class="mono" style="color:var(--amber)">21.7%</td><td>Budget reallocation + audience cleanup</td></tr>
+<tr><td>HubSpot attribution live</td><td class="mono">Connected</td><td class="mono" style="color:var(--amber)">Migrating</td><td>August migration + CAPI setup</td></tr>
+<tr><td>MOF proof assets live</td><td class="mono">3+</td><td class="mono" style="color:var(--rose)">0</td><td>Checklist + case study + scorecard (weeks 2-8)</td></tr>
+</table></div>
+
+<div class="co opp"><strong>The bottom line:</strong> the system works, the format is proven, and the gaps are specific and solvable. Fix the foundation, launch the conversion layer, bridge the channels, and this account graduates. Every action above is owned, dated, and traced to a diagnostic finding in this room.</div>
+</div>
+
+
+<!-- ================= PANEL 6: ACTIVATION ================= -->
+<div class="panel" id="panel6">
+<div class="sec-tag">04 · Activation & Intent</div>
+<h2>Named decision-makers. Stacked signals. Route to sales.</h2>
+<div class="lead">Top engaged accounts enriched with verified decision-makers (LinkedIn-verified, never synthesized), combined with ICP-fit website visitors identified by WebID. Tiered by signal stack: accounts showing 3+ stacked signals close at roughly 5x the zero-signal baseline.</div>
+
+<div class="stats">
+<div class="stat"><div class="n" style="color:var(--blue-b)">10</div><div class="l">Accounts Enriched</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">13</div><div class="l">Verified Decision-Makers</div></div>
+<div class="stat"><div class="n" style="color:var(--cyan)">8</div><div class="l">ICP WebID Prospects</div></div>
+<div class="stat"><div class="n" style="color:var(--green)">3</div><div class="l">Route-Now Accounts</div></div>
+<div class="stat"><div class="n" style="color:var(--amber)">4</div><div class="l">Territory-Fit Accounts</div></div>
+</div>
+
+<div class="co"><strong>How the tiers work:</strong> ROUTE NOW = engagement signal + ICP fit + named senior contacts + territory relevance. NURTURE = strong contacts but a weaker signal or territory gap. MONITOR = single-signal or oversized accounts worth watching. Every contact below is LinkedIn-verified via enrichment — no synthesized emails or guessed contact details, per data integrity standards.</div>
+
+<h3>Tier 1 · Route Now <span class="sub">Hand these to sales this week</span></h3>
+
+<div class="cards">
+<div class="card tg"><div class="ctag g">Route Now · FL + NJ Territory</div><h4>Becker & Poliakoff, P.A.</h4>
+<p style="margin-bottom:10px"><strong>Signals:</strong> 4 ad clicks · HIGH engagement · law practice · 201-500 · HQ Ft. Lauderdale FL + Red Bank NJ office — both in TeamLogic territory.</p>
+<div class="tbl" style="margin:8px 0"><table>
+<tr><th>Contact</th><th>Title</th><th>Angle</th><th></th></tr>
+<tr><td><strong>David Michel</strong></td><td>Chief Information Officer</td><td>Bill · co-managed IT depth</td><td><a href="https://www.linkedin.com/in/david-michel-331b094/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Marilyn Fong</strong></td><td>Chief Operating Officer</td><td>Retention proof · 96%/98%</td><td><a href="https://www.linkedin.com/in/marilyn-fong-47b4988/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Robert Rabinowitz</strong></td><td>Managing Partner, Red Bank NJ</td><td>Pratik · CEO-to-CEO, NJ local</td><td><a href="https://www.linkedin.com/in/robert-rabinowitz-7a60134/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+</table></div>
+<p><strong style="color:var(--green)">Why first:</strong> the only account with High engagement + full buying committee mapped (CIO for technical, COO for operational, MP for relationship) + dual-territory presence. A law firm with 482 staff has real compliance and uptime stakes. Opener: legal-sector security + the NJ local relationship path.</p></div>
+
+<div class="card tg"><div class="ctag g">Route Now · FL Territory</div><h4>Bend Bioscience</h4>
+<p style="margin-bottom:10px"><strong>Signals:</strong> 12 ad clicks (deepest of any ICP account) · Medium engagement · pharma CDMO · 417 employees · $75-200M revenue · Clearwater FL facility in territory.</p>
+<div class="tbl" style="margin:8px 0"><table>
+<tr><th>Contact</th><th>Title</th><th>Angle</th><th></th></tr>
+<tr><td><strong>Dan Dobry</strong></td><td>Chief Strategy Officer</td><td>Pratik · AI + growth infrastructure</td><td><a href="https://www.linkedin.com/in/dandobry/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Richard Sidwell</strong></td><td>SVP & Chief Scientific Officer</td><td>Bill · GMP data integrity</td><td><a href="https://www.linkedin.com/in/richard-sidwell-21ab86/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Daniel Shollenberger</strong></td><td>VP of Quality</td><td>Bill · compliance/audit readiness</td><td><a href="https://www.linkedin.com/in/daniel-shollenberger-8885338/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+</table></div>
+<p><strong style="color:var(--green)">Why now:</strong> a GMP pharma manufacturer lives and dies on validated systems, audit trails, and data integrity — exactly the compliance-heavy vertical from white space Gap #3. 12 clicks says the content is landing. Opener: "We noticed your team engaging with our security content" + HIPAA/GMP angle.</p></div>
+
+<div class="card tb"><div class="ctag b">Route Now · Vertical Fit (Out of Territory)</div><h4>Snoqualmie Valley Health</h4>
+<p style="margin-bottom:10px"><strong>Signals:</strong> 3 website visits / 5 pages (WebID) · public hospital district · 276 employees · Snoqualmie WA — outside PA/NJ/NC/FL territory.</p>
+<div class="tbl" style="margin:8px 0"><table>
+<tr><th>Contact</th><th>Title</th><th>Angle</th><th></th></tr>
+<tr><td><strong>Renee Jensen</strong></td><td>Chief Executive Officer</td><td>Pratik · CEO-to-CEO healthcare</td><td><a href="https://www.linkedin.com/in/renee-jensen/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Tammy Moore</strong></td><td>Chief of Strategic Operations</td><td>Bill · HIPAA operations</td><td><a href="https://www.linkedin.com/in/tammymoorechiefstrategicoperations/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+</table></div>
+<p><strong style="color:var(--blue-b)">Routing note:</strong> hospital researching the site organically. Outside franchise territory — route to the national/franchise-development desk rather than a local owner, or refer cross-network. Signal quality is real either way.</p></div>
+</div>
+
+<h3>Tier 2 · Nurture <span class="sub">Contacts mapped, signal building</span></h3>
+<div class="cards">
+<div class="card ta"><div class="ctag a">Nurture · NC Territory</div><h4>CES Group Engineers, LLP</h4>
+<p style="margin-bottom:10px"><strong>Signals:</strong> 3 ad clicks · Medium engagement · civil engineering · Charlotte NC in territory · woman-owned, gov/DOT contract work (CMMC-adjacent compliance needs).</p>
+<div class="tbl" style="margin:8px 0"><table>
+<tr><th>Contact</th><th>Title</th><th>Angle</th><th></th></tr>
+<tr><td><strong>Judy Heleine</strong></td><td>Managing Partner</td><td>Pratik · owner-operator</td><td><a href="https://www.linkedin.com/in/judy-heleine-r-e-m-6673871b/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Renee Rizzuti</strong></td><td>Chief Operating Officer</td><td>Bill · uptime for field ops</td><td><a href="https://www.linkedin.com/in/renee-rizzuti-4a59a06/" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+</table></div>
+<p>DOT/municipal contract work means compliance requirements and zero tolerance for downtime on survey/CAD systems. Add to MOF retargeting, engage after 2-3 more signal events.</p></div>
+
+<div class="card ta"><div class="ctag a">Nurture · Retry Enrichment</div><h4>Park Place Payments</h4>
+<p><strong>Signals:</strong> HIGH engagement at only 4 clicks / 6 impressions — the most concentrated interaction in the dataset · financial services · 51-200 · $25-75M revenue. <strong style="color:var(--amber)">Enrichment gap:</strong> the decision-maker search returned zero contacts on the first pass (LA-based, distributed workforce). Action: retry with broader titles (founder, VP) — this account is too well-fit to leave unmapped. SOC 2 / payments-compliance angle when contacts land.</p></div>
+
+<div class="card tp"><div class="ctag p">Monitor · Oversized</div><h4>Point72</h4>
+<p><strong>Signals:</strong> 9 website visits / 34 pages — deepest WebID research behavior · global hedge fund · 3,645 employees · Stamford CT. Enrichment returned regional tech leadership (Maciej Olejnik, Investment Services Technology COO — Krakow). <strong>Read:</strong> far above MSP ICP and outside territory; the visits likely represent vendor research or diligence. Keep on the watch list, no outreach spend.</p></div>
+</div>
+
+<h3>Tier 3 · ICP WebID Prospects <span class="sub">Senior visitors identified on the website · LinkedIn-verified</span></h3>
+<div class="tbl"><table>
+<tr><th>Prospect</th><th>Title</th><th>Company</th><th>Industry</th><th>Size</th><th>Signal</th><th>Suggested Voice</th><th></th></tr>
+<tr><td><strong>Brian Law</strong></td><td>President, CEO & Chairman</td><td>Law Family Companies</td><td>Logistics</td><td class="mono">11-50</td><td class="mono">2 visits</td><td>Pratik · CEO-to-CEO</td><td><a href="https://linkedin.com/in/brianlaw1" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Jeanne Pickens</strong></td><td>EVP / COO</td><td>Rogue Credit Union</td><td>Financial Services</td><td class="mono">201-500</td><td class="mono">1 visit</td><td>Bill · SOC 2 / NCUA</td><td><a href="https://linkedin.com/in/jeanne-pickens-282a3a53" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Paula Colbath</strong></td><td>Partner</td><td>Loeb & Loeb</td><td>Legal Services</td><td class="mono">201-500</td><td class="mono">1 visit</td><td>Bill · legal-sector security</td><td><a href="https://linkedin.com/in/paula-colbath-2086734" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Jack Calderon</strong></td><td>Managing Director</td><td>Lincoln International</td><td>Financial Services</td><td class="mono">1K-5K</td><td class="mono">1 visit</td><td>Monitor · oversized</td><td><a href="https://linkedin.com/in/jack-calderon-494a7924b" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Tammy Gerhart</strong></td><td>Director of Resident Services</td><td>Medford Leas (NJ)</td><td>Healthcare</td><td class="mono">2-10</td><td class="mono">1 visit</td><td>Bill · HIPAA, NJ territory</td><td><a href="https://linkedin.com/in/tammy-gerhart-0a32374b" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>Debbie Robinson</strong></td><td>Director, Business Applications</td><td>Texas Health Resources</td><td>Healthcare</td><td class="mono">10K+</td><td class="mono">1 visit</td><td>Monitor · oversized</td><td><a href="https://linkedin.com/in/debbie-robinson-b281416" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>John Larre</strong></td><td>Chief Operating Officer</td><td>Strenta Investment Mgmt</td><td>Investment Mgmt</td><td class="mono">—</td><td class="mono">1 visit</td><td>Bill · SOC 2</td><td><a href="https://linkedin.com/in/john-larre-97a84426" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+<tr><td><strong>David Meehan</strong></td><td>President</td><td>NewSouth Window Solutions</td><td>Manufacturing (FL)</td><td class="mono">201-500</td><td class="mono">1 visit</td><td>Pratik · FL territory</td><td><a href="https://linkedin.com/in/david-meehan-50822a18" target="_blank" style="color:var(--blue-b);font-size:11px;font-weight:700">+ connect</a></td></tr>
+</table></div>
+
+<h3>Intelligence Flags <span class="sub">What the enrichment caught</span></h3>
+<div class="cards">
+<div class="card tr"><div class="ctag r">Excluded · Internal Traffic</div><h4>Franchise Services, Inc. is the franchisor</h4><p>FSI (franserv.com, Mission Viejo CA) is TeamLogic IT's own parent company — its brand family includes Sir Speedy, PIP Printing, and TeamLogic IT itself. The 7 website visits attributed to this "account" are corporate HQ traffic, not a prospect. Excluded from activation; recommend filtering franserv.com from WebID reporting going forward so internal traffic never inflates visitor counts.</p></div>
+<div class="card ta"><div class="ctag a">Angle Change · Acquisition</div><h4>Docket Alarm is now part of Clio</h4><p>The docketalarm.com domain resolves to clio.com/enterprise — Docket Alarm was acquired and its founder has moved on. The 7 visits / 41 pages remain a real legal-tech signal, but the buyer is now Clio's enterprise org (Vancouver/remote), outside the SMB MSP motion. Downgraded to monitor.</p></div>
+<div class="card ta"><div class="ctag a">Verify · Contact Departed</div><h4>Patriot USA + Manatee Senior Care</h4><p>Patriot USA (Kennett Square PA — territory fit, veteran-owned janitorial) returned a departed contact; the LinkedIn headcount (11) also runs well below the claimed 51-200. Manatee Senior Care is 4 employees on LinkedIn — below MSP minimum. Both stay in retargeting; neither justifies outreach spend yet.</p></div>
+<div class="card tr"><div class="ctag r">Excluded · Bot</div><h4>Sam Minifie / API traffic</h4><p>28 visits and 815 pages from a single American Petroleum Institute policy advisor is automated-crawler behavior, not buying intent. Excluded from all prospect counts and recommended for WebID exclusion.</p></div>
+</div>
+
+<h3>Activation Play <span class="sub">Who does what</span></h3>
+<div class="co opp"><strong>Recommended sequence:</strong> (1) This week — your team sends LinkedIn connects to the Becker & Poliakoff trio and Bend Bioscience trio using the voice-matched angles above; Pratik and Bill send from their own profiles where the angle matches (CEO-to-CEO from Pratik, security from Bill) so the TL content history does the warming. (2) Weeks 2-4 — the Lead Gen Form campaign targets these same accounts via Company List upload, so paid and outbound hit together. (3) If your team lacks bandwidth for sequenced outreach, Impactable can run the connect-and-nurture layer through the existing TL profiles — but the first offer is always: your sales team engages, we hand them the signals.</div>
+
+
+<h3>The Warm Activation Flow <span class="sub">Turn organic engagement into pipeline — using the profiles already active</span></h3>
+<div class="lead" style="margin-bottom:16px">Bill and Pratik publish every week and generate 30-60 ICP-matched engagers per month who react and comment. Right now those signals are invisible and unharvested. Because the executive profiles are already active and posting, a warm connection-and-nurture flow can run off content that is already being created — no new content, just signal capture and follow-up.</div>
+
+<div class="flowchart">
+<div class="fstep"><div class="fnum">1</div><div class="fbody"><h4>Engage</h4><p>ICP prospect reacts to or comments on a Bill or Pratik post. 30-60 ICP-matched engagers per month at current volume.</p></div></div>
+<div class="farrow">→</div>
+<div class="fstep"><div class="fnum">2</div><div class="fbody"><h4>Identify</h4><p>Engagement intelligence surfaces WHO engaged: name, company, title, ICP fit. Layer in Trigify to widen signal capture beyond post-engagers.</p></div></div>
+<div class="farrow">→</div>
+<div class="fstep"><div class="fnum">3</div><div class="fbody"><h4>Connect</h4><p>Connection request from the executive's own active profile, referencing the post they engaged with. 40-55% acceptance vs 15-25% cold.</p></div></div>
+<div class="farrow">→</div>
+<div class="fstep"><div class="fnum">4</div><div class="fbody"><h4>Nurture</h4><p>The next TL post does the warming. No pitch. The prospect sees the ongoing content as a connection, building familiarity across weeks.</p></div></div>
+<div class="farrow">→</div>
+<div class="fstep"><div class="fnum">5</div><div class="fbody"><h4>Convert</h4><p>Once warm, the soft ask: the LGF Cybersecurity Scorecard, or a direct meeting request from the exec. Routed to your sales team.</p></div></div>
+</div>
+
+<div class="co opp"><strong>Why this works now, not later:</strong> the constraint on organic is reach (111 avg impressions, bottom quartile) — but engagement quality is high (upper-middle quartile). That means the people who do see the content are the right people. Harvesting their engagement is higher-yield than chasing more reach. And the delivery mechanism (an active, posting executive profile) already exists for both Bill and Pratik. This is the single most efficient activation lever available: it converts sunk content investment into pipeline.</div>
+
+<h3>Signal Sources to Light Up <span class="sub">What feeds the flow — current and recommended</span></h3>
+<div class="tbl"><table>
+<tr><th>Source</th><th>Signal Captured</th><th>Status</th><th>Activation Path</th></tr>
+<tr><td><strong>Post Engagement Intelligence</strong></td><td>Reactors + commenters on Bill/Pratik posts</td><td><span class="badge v-launch">Recommended</span></td><td>Exec-profile connect within 24-48h of engagement</td></tr>
+<tr><td><strong>WebID (DemandSense)</strong></td><td>Companies + named individuals visiting the website</td><td><span class="badge v-strong">Active</span></td><td>ICP-filtered → sales routing + retargeting</td></tr>
+<tr><td><strong>Trigify</strong></td><td>Job changes, keyword-in-bio, competitor followers, post engagers at scale</td><td><span class="badge v-test">Recommended</span></td><td>Feeds connect-and-nurture + list-building for LGF</td></tr>
+<tr><td><strong>LinkedIn Ad Engagement</strong></td><td>Clickers + high-frequency impression accounts</td><td><span class="badge v-strong">Active</span></td><td>MOF retargeting + account routing (see Account tab)</td></tr>
+</table></div>
+<div class="co"><strong>Note on Trigify:</strong> listed as a recommended signal source to expand capture beyond post-engagers — job-change and keyword-in-bio triggers are strong buying signals for MSP switching. Not yet connected; no signal volume is claimed here. Once live, it feeds the same warm flow above.</div>
+
+<h3>Dual-Channel Activation <span class="sub">LinkedIn and email run in parallel</span></h3>
+<div class="cards">
+<div class="card tb"><div class="ctag b">Channel 1 · LinkedIn</div><h4>Executive-profile outreach</h4><p><strong>Delivery:</strong> Bill and Pratik's own profiles (already active, already posting).<br><strong>Motion:</strong> engagement-triggered connect → TL content nurture → soft ask.<br><strong>Voice match:</strong> Pratik connects with CEOs/owners (CEO-to-CEO), Bill connects with CIO/compliance/technical titles.<br><strong>Benchmark:</strong> 40-55% acceptance on warm, engagement-triggered connects.</p></div>
+<div class="card tp"><div class="ctag p">Channel 2 · Email</div><h4>Enriched contact sequences</h4><p><strong>Delivery:</strong> verified emails from Clay enrichment on the routed accounts (Becker, Bend, CES).<br><strong>Motion:</strong> sequenced email referencing the account's engagement, offering the compliance scorecard.<br><strong>Requires:</strong> email enrichment approval (LinkedIn-only until then) + HubSpot for sequencing (Aug migration).<br><strong>Best for:</strong> the named decision-makers who haven't personally engaged on LinkedIn yet.</p></div>
+</div>
+
+<div class="co opp"><strong>Who runs it:</strong> your sales team runs outreach from the executive profiles, with Impactable supplying the signals and the content. If bandwidth for consistent 24-48h follow-up is tight (that window is what makes engagement-triggered outreach convert), Impactable can operate the connect-and-nurture layer through the thought-leadership profiles as a managed motion that compounds the content program already running.</div>
+
+<div class="co"><strong>Data provenance:</strong> Decision-makers sourced via Clay enrichment against verified company domains, LinkedIn profiles confirmed. WebID prospects from DemandSense visitor identification. Signal counts from Windsor.ai (ad engagement) and WebID (site visits). No contact details synthesized; email enrichment available on request per contact.</div>
+</div>
+
+<div class="footer">
+<div class="fb">IMPACTABLE</div>
+<div class="fi">Intelligence Room · TeamLogic IT (IT Assist Inc) · January—July 2026<br>
+Data: Windsor.ai (Acct 517602039) · DemandSense Rate Accounts (6,490) · WebID (200 accounts / 184 prospects) · TL Reports (Apr/May/Jun)<br>
+Diagnostics: Audience Segment Intelligence · Account Intelligence · Messaging & Creative · Channel Efficiency & Frequency<br>
+Prepared by Impactable LLC · impactable.com · LinkedIn Marketing Partner</div>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+Chart.defaults.color='#94A3B8';
+Chart.defaults.borderColor='rgba(59,130,246,0.06)';
+Chart.defaults.font.family="'Inter',sans-serif";
+
+// ===== TAB SWITCHING =====
+const charts = {};
+let chartsBuilt = {0:true,1:false,2:false,3:false,4:false,5:true,6:true};
+
+const TAB_TO_PANEL = [0,1,3,2,6,4,5]; // tab order -> panel id
+function showTab(n){
+  const pid = TAB_TO_PANEL[n];
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel'+pid).classList.add('active');
+  document.querySelectorAll('.tabbtn').forEach((b,i)=>b.classList.toggle('active',i===n));
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(!chartsBuilt[pid]){ buildCharts(pid); chartsBuilt[pid]=true; }
+}
+
+// ===== LEADERBOARD FILTER =====
+function filterLB(btn, mode){
+  btn.parentElement.querySelectorAll('.subtab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('#lbTable .lbrow').forEach(r=>{
+    const icp = r.dataset.icp, src = r.dataset.src;
+    let show = true;
+    if(mode==='icp') show = (icp==='strong'||icp==='moderate');
+    else if(mode==='ad') show = (src==='ad');
+    else if(mode==='webid') show = (src==='webid');
+    r.style.display = show ? '' : 'none';
+  });
+}
+
+// ===== CHART BUILDERS =====
+const W=['7d','30d','60d','90d'];
+const gridOpt={color:'rgba(59,130,246,0.06)'};
+const legendBottom={position:'bottom',labels:{font:{size:11},padding:10}};
+
+function buildCharts(n){
+  if(n===1){
+    // ICP pie
+    new Chart(document.getElementById('a_icpPie'),{type:'doughnut',data:{labels:['ICP Industries (14.8%)','Broader Reach (85.2%)'],datasets:[{data:[14.8,85.2],backgroundColor:['#10B981','#F59E0B'],borderWidth:0}]},options:{cutout:'62%',plugins:{legend:legendBottom}}});
+    // ICP CTR compare
+    new Chart(document.getElementById('a_icpCtr'),{type:'bar',data:{labels:['Pharmaceuticals','IT Services','Hospital & HC','Financial Svcs'],datasets:[{data:[0.94,0.43,0.20,0.19],backgroundColor:['#10B981','#10B981','#F59E0B','#F59E0B'],borderRadius:4}]},options:{scales:{y:{title:{display:true,text:'CTR %',color:'#64748B'},grid:gridOpt}},plugins:{legend:{display:false}}}});
+  }
+  if(n===2){
+    new Chart(document.getElementById('b_funnel'),{type:'bar',data:{labels:['Reached','Ad Clicked','WebID Visitors','Named Prospects','Med/High Eng','Multi-Signal'],datasets:[{data:[6490,59,200,184,8,4],backgroundColor:['#64748B','#3B82F6','#06B6D4','#8B5CF6','#10B981','#F59E0B'],borderRadius:4}]},options:{indexAxis:'y',scales:{x:{type:'logarithmic',grid:gridOpt},y:{grid:{display:false}}},plugins:{legend:{display:false}}}});
+    new Chart(document.getElementById('b_source'),{type:'doughnut',data:{labels:['Ad Engaged Only (59)','WebID Only (196)','Multi-Signal Imp-Level (4)'],datasets:[{data:[59,196,4],backgroundColor:['#3B82F6','#8B5CF6','#F59E0B'],borderWidth:0}]},options:{cutout:'62%',plugins:{legend:legendBottom}}});
+  }
+  if(n===3){
+    new Chart(document.getElementById('c_alloc'),{type:'bar',data:{labels:['TOF Image','TOF TL Video','MOF Image','MOF TL Video'],datasets:[{label:'% of Spend',data:[51,30,11,8],backgroundColor:'rgba(239,68,68,0.45)',borderRadius:4},{label:'% of Clicks',data:[24,58,4,14],backgroundColor:'rgba(16,185,129,0.55)',borderRadius:4}]},options:{scales:{y:{grid:gridOpt}},plugins:{legend:legendBottom}}});
+    new Chart(document.getElementById('c_erTrend'),{type:'line',data:{labels:['Week 1','Week 2','Week 3','Week 4'],datasets:[{label:'Bill Weekly ER %',data:[2.18,3.45,4.92,6.41],borderColor:'#10B981',backgroundColor:'rgba(16,185,129,0.08)',fill:true,tension:0.3,pointRadius:6,pointBackgroundColor:'#10B981'}]},options:{scales:{y:{grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:{display:false}}}});
+    // Organic 3-month arc
+    new Chart(document.getElementById('c_organicArc'),{type:'line',data:{labels:['April','May','June'],datasets:[
+      {label:'TeamLogic ER %',data:[4.29,1.84,3.31],borderColor:'#0099d1',backgroundColor:'rgba(0,153,209,0.1)',fill:true,tension:0.3,pointRadius:6,pointBackgroundColor:'#0099d1'},
+      {label:'Peer Median %',data:[3.49,4.0,3.13],borderColor:'#64748B',borderDash:[5,4],tension:0.3,pointRadius:4}
+    ]},options:{scales:{y:{title:{display:true,text:'Engagement Rate %',color:'#64748B'},grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:legendBottom}}});
+    // Pillar reach vs engagement
+    new Chart(document.getElementById('c_pillarSplit'),{type:'bar',data:{labels:['Cybersecurity','AI & Emerging Tech'],datasets:[
+      {label:'Avg ER %',data:[5.59,2.69],backgroundColor:'#10B981',borderRadius:4,yAxisID:'y'},
+      {label:'Avg Impressions',data:[185,278],backgroundColor:'rgba(139,92,246,0.4)',borderRadius:4,yAxisID:'y1'}
+    ]},options:{scales:{y:{title:{display:true,text:'ER %',color:'#64748B'},grid:gridOpt},y1:{position:'right',title:{display:true,text:'Impressions',color:'#64748B'},grid:{display:false}}},plugins:{legend:legendBottom}}});
+  }
+  if(n===4){
+    new Chart(document.getElementById('d_freq'),{type:'line',data:{labels:W,datasets:[
+      {label:'TOF TL Video',data:[1.17,1.93,2.72,3.62],borderColor:'#10B981',tension:0.3,pointRadius:5},
+      {label:'TOF Image',data:[1.45,2.78,4.19,5.68],borderColor:'#EF4444',tension:0.3,pointRadius:5},
+      {label:'MOF TL Video',data:[2.0,4.18,6.33,8.29],borderColor:'#06B6D4',tension:0.3,pointRadius:5},
+      {label:'MOF Image',data:[1.24,2.09,5.93,10.60],borderColor:'#F59E0B',tension:0.3,pointRadius:5}
+    ]},options:{scales:{y:{title:{display:true,text:'Avg Frequency',color:'#64748B'},grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:legendBottom}}});
+    new Chart(document.getElementById('d_ctr'),{type:'line',data:{labels:W,datasets:[
+      {label:'TOF TL Video',data:[1.22,1.28,1.37,1.47],borderColor:'#10B981',tension:0.3,pointRadius:5},
+      {label:'TOF Image',data:[0.71,0.45,0.43,0.48],borderColor:'#EF4444',tension:0.3,pointRadius:5},
+      {label:'MOF TL Video',data:[1.60,1.67,1.95,2.33],borderColor:'#06B6D4',tension:0.3,pointRadius:5},
+      {label:'MOF Image',data:[0.34,0.84,0.68,0.67],borderColor:'#F59E0B',tension:0.3,pointRadius:5}
+    ]},options:{scales:{y:{title:{display:true,text:'CTR %',color:'#64748B'},grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:legendBottom}}});
+    new Chart(document.getElementById('d_coldpen'),{type:'line',data:{labels:W,datasets:[
+      {label:'TL Video',data:[5.0,11.2,17.1,21.7],borderColor:'#10B981',backgroundColor:'rgba(16,185,129,0.08)',fill:true,tension:0.3,pointRadius:5},
+      {label:'Image',data:[3.9,9.6,13.7,16.7],borderColor:'#EF4444',backgroundColor:'rgba(239,68,68,0.05)',fill:true,tension:0.3,pointRadius:5}
+    ]},options:{scales:{y:{max:50,title:{display:true,text:'% of 35K',color:'#64748B'},grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:legendBottom}}});
+    new Chart(document.getElementById('d_warmpen'),{type:'line',data:{labels:W,datasets:[
+      {label:'TL Video',data:[59.8,96.8,112.9,118.9],borderColor:'#06B6D4',backgroundColor:'rgba(6,182,212,0.08)',fill:true,tension:0.3,pointRadius:5},
+      {label:'Image',data:[19.8,47.3,78.2,87.4],borderColor:'#F59E0B',backgroundColor:'rgba(245,158,11,0.05)',fill:true,tension:0.3,pointRadius:5}
+    ]},options:{scales:{y:{title:{display:true,text:'% of 1,200',color:'#64748B'},grid:gridOpt},x:{grid:{display:false}}},plugins:{legend:legendBottom}}});
+    new Chart(document.getElementById('d_monthly'),{type:'bar',data:{labels:['Jan','Feb','Mar','Apr','May','Jun','Jul*'],datasets:[
+      {label:'Spend $',data:[3425,3102,2945,2876,2891,2115,916],backgroundColor:'rgba(59,130,246,0.5)',borderRadius:4,yAxisID:'y'},
+      {label:'Clicks',data:[134,385,310,298,356,298,173],backgroundColor:'rgba(16,185,129,0.5)',borderRadius:4,yAxisID:'y1'}
+    ]},options:{scales:{y:{title:{display:true,text:'Spend',color:'#64748B'},grid:gridOpt},y1:{position:'right',title:{display:true,text:'Clicks',color:'#64748B'},grid:{display:false}}},plugins:{legend:legendBottom}}});
+  }
+}
+
+// Build exec summary charts on load (panel 0 has no charts, so nothing needed)
+chartsBuilt[0]=true;
+</script>
+</body>
+</html>
